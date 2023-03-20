@@ -5,4 +5,4 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class WebdavStorageViewModel @Inject constructor(val webdavStorage: WebdavStorage) : ViewModel()
+class WebdavStorageBuilderViewModel @Inject constructor(val webdavStorageBuilder: WebdavStorageBuilder) : ViewModel()

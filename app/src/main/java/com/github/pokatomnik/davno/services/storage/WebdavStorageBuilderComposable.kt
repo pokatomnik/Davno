@@ -4,6 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-fun rememberWebdavStorage(): WebdavStorage {
-    return hiltViewModel<WebdavStorageViewModel>().webdavStorage
+fun rememberWebdavStorage(): WebdavStorageBuilder {
+    return hiltViewModel<WebdavStorageBuilderViewModel>().webdavStorageBuilder
 }

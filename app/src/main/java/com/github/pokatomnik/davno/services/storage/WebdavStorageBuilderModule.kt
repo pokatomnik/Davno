@@ -9,8 +9,8 @@ import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
 @Module
-class WebdavStorageModule {
+class WebdavStorageBuilderModule {
     @Singleton
     @Provides
-    fun provideWebDavStorage(path: Path) = WebdavStorage(path)
+    fun provideWebDavStorage(path: Path) = WebdavStorageBuilder(path)
 }
