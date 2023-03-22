@@ -4,12 +4,13 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Drafts
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.runtime.*
 import com.github.pokatomnik.davno.services.storage.WebdavStorage
 import com.github.pokatomnik.davno.screens.vaultview.storage.up
-import com.github.pokatomnik.davno.ui.components.LazyList
-import com.github.pokatomnik.davno.ui.components.ListNavItem
-import com.github.pokatomnik.davno.ui.components.PageContainer
+import com.github.pokatomnik.davno.ui.components.*
 import com.github.pokatomnik.davno.ui.components.PageTitle
 import com.thegrizzlylabs.sardineandroid.DavResource
 
@@ -52,14 +53,24 @@ fun WebdavNavigator(
             list = directoryListState.value,
             renderItem = { index, davResource ->
                 when (index) {
-                    0 -> if (history.currentValue == "/") return@LazyList else ListNavItem(
+                    0 -> if (history.currentValue == "/") return@LazyList else IconicListNavItem(
                         title = "..",
+                        icon = Icons.Filled.Folder,
+                        iconContentDescription = "Папка \"${davResource.path.up()}\"",
                         onPress = {
                             history.push(davResource.path.up())
                         }
                     )
-                    else -> ListNavItem(
+                    else -> IconicListNavItem(
                         title = davResource.name,
+                        icon = when (davResource.isDirectory) {
+                            true -> Icons.Filled.Folder
+                            false -> Icons.Filled.Description
+                        },
+                        iconContentDescription = when (davResource.isDirectory) {
+                            true -> "Папка \"${davResource.name}\""
+                            false -> "Файл \"${davResource.name}\""
+                        },
                         onPress = {
                             if (davResource.isDirectory) {
                                 history.push(davResource.path)
