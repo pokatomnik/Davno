@@ -15,6 +15,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
@@ -26,6 +28,7 @@ fun ListNavItem(
     onLongPress: (() -> Unit)? = null,
     onPress: (() -> Unit)? = null,
 ) {
+    val haptic = LocalHapticFeedback.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -34,7 +37,10 @@ fun ListNavItem(
                 indication = rememberRipple(bounded = true),
                 interactionSource = remember { MutableInteractionSource() },
                 onClick = { onPress?.invoke() },
-                onLongClick = { onLongPress?.invoke() }
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onLongPress?.invoke()
+                }
             )
 
             .padding(horizontal = LARGE_PADDING.dp),
