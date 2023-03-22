@@ -70,7 +70,7 @@ fun AppComposable() {
                         navigation.vaultViewRoute.Params { vaultId ->
                             VaultView(
                                 vaultId = vaultId.toLong(),
-                                onNavigateBack = {
+                                onNavigateBackToVaultSelector = {
                                     navigation.navigateBack()
                                 }
                             )
