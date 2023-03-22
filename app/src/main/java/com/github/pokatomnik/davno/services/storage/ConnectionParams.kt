@@ -1,4 +1,4 @@
-package com.github.pokatomnik.davno.services.storage
+package com.github.pokatomnik.davno.screens.vaultview.storage
 
 data class ConnectionParams(
     val userName: String,

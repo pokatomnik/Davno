@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -15,11 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.github.pokatomnik.davno.services.db.rememberDavnoDatabase
+import com.github.pokatomnik.davno.services.storage.WebdavStorage
 import com.github.pokatomnik.davno.ui.components.LARGE_PADDING
 import com.github.pokatomnik.davno.ui.components.PageContainer
 import com.github.pokatomnik.davno.ui.components.PageTitle
 import com.github.pokatomnik.davno.ui.components.makeToast
 import com.github.pokatomnik.davno.ui.widgets.VaultForm
+import com.github.pokatomnik.davno.ui.widgets.rememberWebdavConnectionTester
 import kotlinx.coroutines.launch
 
 @Composable
@@ -29,6 +32,7 @@ fun VaultAdd(
     val coroutineScope = rememberCoroutineScope()
     val vaultsDAO = rememberDavnoDatabase().vaultsDAO()
     val toast = makeToast()
+    val webdavConnectionTester = rememberWebdavConnectionTester()
 
     val nameState = remember { mutableStateOf("") }
     val rootUrlState = remember { mutableStateOf("") }
@@ -51,7 +55,18 @@ fun VaultAdd(
             )
             onNavigateBack()
         }
+    }
 
+    val testConnection: () -> Unit = {
+        webdavConnectionTester(
+            userNameState.value,
+            passwordState.value,
+            rootUrlState.value
+        ).apply {
+            onOk { toast("Соединение установлено") }
+            onFail { toast("Не удалось установить соединение") }
+            test()
+        }
     }
 
     PageContainer(
@@ -65,6 +80,14 @@ fun VaultAdd(
         },
         header = {
             PageTitle(title = "Добавить")
+        },
+        trailingButton = {
+            IconButton(onClick = testConnection) {
+                Icon(
+                    imageVector = Icons.Filled.BugReport,
+                    contentDescription = "Проверить"
+                )
+            }
         }
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -74,11 +97,15 @@ fun VaultAdd(
                     .padding(horizontal = LARGE_PADDING.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Spacer(modifier = Modifier.fillMaxWidth().height((LARGE_PADDING * 2).dp))
+                Spacer(modifier = Modifier
+                    .fillMaxWidth()
+                    .height((LARGE_PADDING * 2).dp))
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text("Конфигурация подключения")
                 }
-                Spacer(modifier = Modifier.fillMaxWidth().height(LARGE_PADDING.dp))
+                Spacer(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(LARGE_PADDING.dp))
                 VaultForm(
                     name = nameState.value,
                     onNameChange = { nameState.value = it },

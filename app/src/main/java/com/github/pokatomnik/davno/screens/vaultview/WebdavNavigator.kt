@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import com.github.pokatomnik.davno.services.storage.WebdavStorage
+import com.github.pokatomnik.davno.screens.vaultview.storage.up
 import com.github.pokatomnik.davno.ui.components.LazyList
 import com.github.pokatomnik.davno.ui.components.ListNavItem
 import com.github.pokatomnik.davno.ui.components.PageContainer
@@ -71,14 +72,4 @@ fun WebdavNavigator(
             }
         )
     }
-}
-
-private fun String.up(): String {
-    val startsWithSlash = this.startsWith("/")
-    val parent = this
-        .split("/")
-        .filter { it.isNotEmpty() }
-        .dropLast(1)
-        .joinToString("/")
-    return if (startsWithSlash) "/$parent" else parent
 }
