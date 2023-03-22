@@ -14,12 +14,6 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.thegrizzlylabs.sardineandroid.DavResource
 import kotlinx.coroutines.launch
 
-data class DavResourceState(
-    val isLoading: Boolean,
-    val errorText: String?,
-    val data: List<DavResource>
-)
-
 @Composable
 fun WebdavNavigator(
     history: History<String>,
@@ -29,12 +23,15 @@ fun WebdavNavigator(
     val coroutineScope = rememberCoroutineScope()
     val directoryListState = remember(history.currentValue, webdavStorage) {
         mutableStateOf(
-            DavResourceState(
+            DavResourceState<List<DavResource>>(
                 isLoading = false,
                 errorText = null,
                 data = listOf()
             )
         )
+    }
+    val fileViewPathState = remember {
+        mutableStateOf<String?>(null)
     }
 
     val reloadDavResources: () -> Unit = {
@@ -73,68 +70,76 @@ fun WebdavNavigator(
         }
     }
 
-    PageContainer(
-        priorButton = {
-            IconButton(onClick = navigateBack) {
-                Icon(
-                    imageVector = Icons.Filled.ArrowBack,
-                    contentDescription = "Назад"
-                )
-            }
-        },
-        header = {
-            PageTitle(title = "Просмотр")
-        },
-        trailingButton = {
-            if (history.canGoForward) {
-                IconButton(onClick = { history.moveForward() }) {
+    when (val fileViewPath = fileViewPathState.value) {
+        null -> PageContainer(
+            priorButton = {
+                IconButton(onClick = navigateBack) {
                     Icon(
-                        imageVector = Icons.Filled.ArrowForward,
-                        contentDescription = "Вперед"
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Назад"
                     )
                 }
-            }
-        }
-    ) {
-        SwipeRefresh(
-            state = rememberSwipeRefreshState(
-                isRefreshing = directoryListState.value.isLoading
-            ),
-            onRefresh = reloadDavResources
-        ) {
-            LazyList(
-                list = directoryListState.value.data,
-                renderItem = { index, davResource ->
-                    when (index) {
-                        0 -> if (history.currentValue == "/") return@LazyList else IconicListNavItem(
-                            title = "..",
-                            icon = Icons.Filled.Folder,
-                            iconContentDescription = "Папка \"${davResource.path.up()}\"",
-                            onPress = {
-                                history.push(davResource.path.up())
-                            }
-                        )
-                        else -> IconicListNavItem(
-                            title = davResource.name,
-                            icon = when (davResource.isDirectory) {
-                                true -> Icons.Filled.Folder
-                                false -> Icons.Filled.Description
-                            },
-                            iconContentDescription = when (davResource.isDirectory) {
-                                true -> "Папка \"${davResource.name}\""
-                                false -> "Файл \"${davResource.name}\""
-                            },
-                            onPress = {
-                                if (davResource.isDirectory) {
-                                    history.push(davResource.path)
-                                } else {
-                                    // TODO implement file view
-                                }
-                            }
+            },
+            header = {
+                PageTitle(title = "Просмотр")
+            },
+            trailingButton = {
+                if (history.canGoForward) {
+                    IconButton(onClick = { history.moveForward() }) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowForward,
+                            contentDescription = "Вперед"
                         )
                     }
                 }
-            )
+            }
+        ) {
+            SwipeRefresh(
+                state = rememberSwipeRefreshState(
+                    isRefreshing = directoryListState.value.isLoading
+                ),
+                onRefresh = reloadDavResources
+            ) {
+                LazyList(
+                    list = directoryListState.value.data,
+                    renderItem = { index, davResource ->
+                        when (index) {
+                            0 -> if (history.currentValue == "/") return@LazyList else IconicListNavItem(
+                                title = "..",
+                                icon = Icons.Filled.Folder,
+                                iconContentDescription = "Папка \"${davResource.path.up()}\"",
+                                onPress = {
+                                    history.push(davResource.path.up())
+                                }
+                            )
+                            else -> IconicListNavItem(
+                                title = davResource.name,
+                                icon = when (davResource.isDirectory) {
+                                    true -> Icons.Filled.Folder
+                                    false -> Icons.Filled.Description
+                                },
+                                iconContentDescription = when (davResource.isDirectory) {
+                                    true -> "Папка \"${davResource.name}\""
+                                    false -> "Файл \"${davResource.name}\""
+                                },
+                                onPress = {
+                                    if (davResource.isDirectory) {
+                                        history.push(davResource.path)
+                                    } else {
+                                        fileViewPathState.value = davResource.path
+                                    }
+                                }
+                            )
+                        }
+                    }
+                )
+            }
         }
+        else -> FileView(
+            path = fileViewPath,
+            webdavStorage = webdavStorage,
+            onExit = { fileViewPathState.value = null }
+        )
     }
+
 }
