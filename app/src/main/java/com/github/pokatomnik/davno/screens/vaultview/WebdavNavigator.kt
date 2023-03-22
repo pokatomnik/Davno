@@ -3,16 +3,22 @@ package com.github.pokatomnik.davno.screens.vaultview
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Drafts
-import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import com.github.pokatomnik.davno.services.storage.WebdavStorage
 import com.github.pokatomnik.davno.screens.vaultview.storage.up
 import com.github.pokatomnik.davno.ui.components.*
 import com.github.pokatomnik.davno.ui.components.PageTitle
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.thegrizzlylabs.sardineandroid.DavResource
+import kotlinx.coroutines.launch
+
+data class DavResourceState(
+    val isLoading: Boolean,
+    val errorText: String?,
+    val data: List<DavResource>
+)
 
 @Composable
 fun WebdavNavigator(
@@ -20,12 +26,43 @@ fun WebdavNavigator(
     webdavStorage: WebdavStorage,
     onNavigateBackToVaultSelector: () -> Unit,
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val directoryListState = remember(history.currentValue, webdavStorage) {
-        mutableStateOf<List<DavResource>>(listOf())
-    }.apply {
-        LaunchedEffect(webdavStorage, history.currentValue) {
-            value = webdavStorage.list(history.currentValue)
+        mutableStateOf(
+            DavResourceState(
+                isLoading = false,
+                errorText = null,
+                data = listOf()
+            )
+        )
+    }
+
+    val reloadDavResources: () -> Unit = {
+        coroutineScope.launch {
+            directoryListState.value = DavResourceState(
+                isLoading = true,
+                errorText = null,
+                data = directoryListState.value.data
+            )
+            directoryListState.value = try {
+                val davResources = webdavStorage.list(history.currentValue)
+                DavResourceState(
+                    isLoading = false,
+                    errorText = null,
+                    data = davResources
+                )
+            } catch (e: Exception) {
+                DavResourceState(
+                    isLoading = false,
+                    errorText = e.message ?: "Неизвестная ошибка загрузки",
+                    data = listOf()
+                )
+            }
         }
+    }
+
+    LaunchedEffect(webdavStorage, history.currentValue) {
+        reloadDavResources()
     }
 
     val navigateBack: () -> Unit = {
@@ -47,40 +84,57 @@ fun WebdavNavigator(
         },
         header = {
             PageTitle(title = "Просмотр")
-        }
-    ) {
-        LazyList(
-            list = directoryListState.value,
-            renderItem = { index, davResource ->
-                when (index) {
-                    0 -> if (history.currentValue == "/") return@LazyList else IconicListNavItem(
-                        title = "..",
-                        icon = Icons.Filled.Folder,
-                        iconContentDescription = "Папка \"${davResource.path.up()}\"",
-                        onPress = {
-                            history.push(davResource.path.up())
-                        }
-                    )
-                    else -> IconicListNavItem(
-                        title = davResource.name,
-                        icon = when (davResource.isDirectory) {
-                            true -> Icons.Filled.Folder
-                            false -> Icons.Filled.Description
-                        },
-                        iconContentDescription = when (davResource.isDirectory) {
-                            true -> "Папка \"${davResource.name}\""
-                            false -> "Файл \"${davResource.name}\""
-                        },
-                        onPress = {
-                            if (davResource.isDirectory) {
-                                history.push(davResource.path)
-                            } else {
-                                // TODO implement file view
-                            }
-                        }
+        },
+        trailingButton = {
+            if (history.canGoForward) {
+                IconButton(onClick = { history.moveForward() }) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowForward,
+                        contentDescription = "Вперед"
                     )
                 }
             }
-        )
+        }
+    ) {
+        SwipeRefresh(
+            state = rememberSwipeRefreshState(
+                isRefreshing = directoryListState.value.isLoading
+            ),
+            onRefresh = reloadDavResources
+        ) {
+            LazyList(
+                list = directoryListState.value.data,
+                renderItem = { index, davResource ->
+                    when (index) {
+                        0 -> if (history.currentValue == "/") return@LazyList else IconicListNavItem(
+                            title = "..",
+                            icon = Icons.Filled.Folder,
+                            iconContentDescription = "Папка \"${davResource.path.up()}\"",
+                            onPress = {
+                                history.push(davResource.path.up())
+                            }
+                        )
+                        else -> IconicListNavItem(
+                            title = davResource.name,
+                            icon = when (davResource.isDirectory) {
+                                true -> Icons.Filled.Folder
+                                false -> Icons.Filled.Description
+                            },
+                            iconContentDescription = when (davResource.isDirectory) {
+                                true -> "Папка \"${davResource.name}\""
+                                false -> "Файл \"${davResource.name}\""
+                            },
+                            onPress = {
+                                if (davResource.isDirectory) {
+                                    history.push(davResource.path)
+                                } else {
+                                    // TODO implement file view
+                                }
+                            }
+                        )
+                    }
+                }
+            )
+        }
     }
 }
