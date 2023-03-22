@@ -1,8 +1,6 @@
 package com.github.pokatomnik.davno.screens.vaultview
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
@@ -12,9 +10,11 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.github.pokatomnik.davno.services.storage.WebdavStorage
 import com.github.pokatomnik.davno.ui.components.PageContainer
 import com.github.pokatomnik.davno.ui.components.PageTitle
+import com.github.pokatomnik.davno.ui.components.SMALL_PADDING
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import dev.jeziellago.compose.markdowntext.MarkdownText
@@ -86,14 +86,17 @@ fun FileView(
         ) {
            Column(
                modifier = Modifier
-                   .fillMaxHeight()
+                   .fillMaxSize()
                    .verticalScroll(rememberScrollState())
+                   .padding(horizontal = SMALL_PADDING.dp)
            ) {
+               Spacer(modifier = Modifier.height(SMALL_PADDING.dp))
                MarkdownText(
                    markdown = contentState.value.data,
                    modifier = Modifier.fillMaxSize(),
                    textAlign = TextAlign.Justify,
                )
+               Spacer(modifier = Modifier.height(SMALL_PADDING.dp))
            }
         }
     }
