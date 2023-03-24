@@ -32,3 +32,9 @@ fun String.fileExt(): String {
         parts.last()
     }
 }
+
+fun String.lastPathPartOrEmpty(): String {
+    val parts = this.split('/').filter { it.isNotEmpty() }
+    if (parts.isEmpty()) return ""
+    return parts.last()
+}
