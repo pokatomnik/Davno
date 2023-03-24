@@ -1,6 +1,7 @@
 package com.github.pokatomnik.davno.services.storage
 
-import com.github.pokatomnik.davno.screens.vaultview.storage.joinPaths
+import com.github.pokatomnik.davno.services.storage.filters.Markdown
+import com.github.pokatomnik.davno.services.storage.filters.WebdavResourceListFilter
 import com.thegrizzlylabs.sardineandroid.DavResource
 import com.thegrizzlylabs.sardineandroid.impl.OkHttpSardine
 import kotlinx.coroutines.Dispatchers
@@ -20,9 +21,18 @@ class WebdavStorage(
         setCredentials(userName, password)
     }
 
+    private val webDavResourceFilters = listOf<WebdavResourceListFilter>(
+        Markdown()
+    )
+
     suspend fun list(relativePath: String): List<DavResource> = withContext(context) {
         val absolutePath = joinPaths(rootPath, relativePath)
-        sardine.list(absolutePath)
+        val webdavResources = sardine.list(absolutePath)
+        webDavResourceFilters.fold(webdavResources) {
+            currentFilteredList,
+            davFilter ->
+            davFilter.filterWebdavResourceList(currentFilteredList)
+        }
     }
 
     suspend fun test(): Boolean {

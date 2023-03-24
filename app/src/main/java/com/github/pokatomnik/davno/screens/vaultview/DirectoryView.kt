@@ -9,7 +9,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import com.github.pokatomnik.davno.screens.vaultview.storage.up
+import com.github.pokatomnik.davno.services.storage.up
 import com.github.pokatomnik.davno.ui.components.IconicListNavItem
 import com.github.pokatomnik.davno.ui.components.LazyList
 import com.github.pokatomnik.davno.ui.components.PageContainer

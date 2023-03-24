@@ -1,4 +1,4 @@
-package com.github.pokatomnik.davno.screens.vaultview.storage
+package com.github.pokatomnik.davno.services.storage
 
 private fun removeSlashes(input: String): String {
     return input.removePrefix("/").removeSuffix("/");
@@ -24,4 +24,11 @@ fun String.up(): String {
         .dropLast(1)
         .joinToString("/")
     return if (startsWithSlash) "/$parent" else parent
+}
+
+fun String.fileExt(): String {
+    val parts = this.split('.')
+    return if (parts.size == 1) "" else {
+        parts.last()
+    }
 }
