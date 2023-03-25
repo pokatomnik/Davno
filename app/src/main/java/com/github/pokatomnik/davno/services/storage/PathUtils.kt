@@ -38,3 +38,16 @@ fun String.lastPathPartOrEmpty(): String {
     if (parts.isEmpty()) return ""
     return parts.last()
 }
+
+private val allowedAlphabet = "abcdefghijklmnopqrstuvwxyzабвгдеёжзийклмнопрстуфхцчшщъыьэюя"
+    .let { it + it.uppercase() }
+    .plus(" _-()[]")
+    .plus("0123456789".split("").toSet())
+fun String.allowedFilesystemName(): Boolean {
+    for (char in this@allowedFilesystemName) {
+        if (!allowedAlphabet.contains(char)) {
+            return false
+        }
+    }
+    return true
+}

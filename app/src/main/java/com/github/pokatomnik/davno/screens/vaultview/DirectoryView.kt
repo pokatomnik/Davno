@@ -4,17 +4,16 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import com.github.pokatomnik.davno.services.storage.lastPathPartOrEmpty
 import com.github.pokatomnik.davno.services.storage.up
-import com.github.pokatomnik.davno.ui.components.IconicListNavItem
-import com.github.pokatomnik.davno.ui.components.LazyList
-import com.github.pokatomnik.davno.ui.components.PageContainer
-import com.github.pokatomnik.davno.ui.components.PageTitle
+import com.github.pokatomnik.davno.ui.components.*
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.thegrizzlylabs.sardineandroid.DavResource
@@ -26,7 +25,14 @@ fun DirectoryView(
     onNavigateBack: () -> Unit,
     onReload: () -> Unit,
     onFilePress: (file: DavResource) -> Unit,
+    onCreateFolder: (name: String) -> Unit,
 ) {
+    val alertDisplayedState = remember { mutableStateOf(false) }
+
+    CreateFolderDialog(
+        visibilityState = alertDisplayedState,
+        onCreateFolder = onCreateFolder
+    )
     PageContainer(
         priorButton = {
             IconButton(onClick = onNavigateBack) {
@@ -40,14 +46,33 @@ fun DirectoryView(
             PageTitle(title = history.currentValue.lastPathPartOrEmpty().ifEmpty { "/" })
         },
         trailingButton = {
-            if (history.canGoForward) {
-                IconButton(onClick = { history.moveForward() }) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowForward,
-                        contentDescription = "Вперед"
-                    )
+            val menuDisplayedState = remember { mutableStateOf(false) }
+            ContextMenu(
+                expanded = menuDisplayedState.value,
+                items = (if (history.canGoForward) listOf(
+                    object : ContextMenuItem {
+                        override val id = "ID_GO_FORWARD"
+                        override val title = "Вперед"
+                        override fun onClick(id: String) { history.moveForward() }
+                    }
+                ) else listOf()) +
+                    listOf(
+                        object : ContextMenuItem {
+                            override val id = "ID_CREATE_DIRECTORY"
+                            override val title = "Создать папку здесь"
+                            override fun onClick(id: String) { alertDisplayedState.value = true }
+                        }
+                    ),
+                onDismiss = { menuDisplayedState.value = false },
+                content = {
+                    IconButton(onClick = { menuDisplayedState.value = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "Меню"
+                        )
+                    }
                 }
-            }
+            )
         }
     ) {
         SwipeRefresh(

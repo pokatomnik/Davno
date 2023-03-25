@@ -2,6 +2,7 @@ package com.github.pokatomnik.davno.screens.vaultview
 
 import androidx.compose.runtime.*
 import com.github.pokatomnik.davno.services.storage.WebdavStorage
+import com.github.pokatomnik.davno.services.storage.joinPaths
 import com.github.pokatomnik.davno.ui.components.makeToast
 import com.thegrizzlylabs.sardineandroid.DavResource
 import kotlinx.coroutines.launch
@@ -87,13 +88,27 @@ fun WebdavNavigator(
         selectedDavResourceState.value = davResource
     }
 
+    val handleCreateFolder: (name: String) -> Unit = { name ->
+        coroutineScope.launch {
+            try {
+                webdavStorage.createDirectory(joinPaths(history.currentValue, name))
+                toast("Папка $name успешно создана")
+                reloadDavResources()
+            } catch (e : Exception) {
+                val errorMessage = e.message ?: "Неизвестная ошибка"
+                toast("Не удалось создать папку. Ошибка: $errorMessage")
+            }
+        }
+    }
+
     when (val selectedDavResource = selectedDavResourceState.value) {
         null -> DirectoryView(
             history = history,
             directoryListState = directoryListState,
             onNavigateBack = handleNavigateBack,
             onReload = reloadDavResources,
-            onFilePress = handleFilePress
+            onFilePress = handleFilePress,
+            onCreateFolder = handleCreateFolder,
         )
         else -> FileOpener(
             path = selectedDavResource.path,
