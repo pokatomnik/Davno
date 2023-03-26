@@ -41,7 +41,7 @@ fun String.lastPathPartOrEmpty(): String {
 
 private val allowedAlphabet = "abcdefghijklmnopqrstuvwxyzабвгдеёжзийклмнопрстуфхцчшщъыьэюя"
     .let { it + it.uppercase() }
-    .plus(" _-()[]")
+    .plus(" _-()[].")
     .plus("0123456789".split("").toSet())
 fun String.allowedFilesystemName(): Boolean {
     for (char in this@allowedFilesystemName) {

@@ -27,12 +27,21 @@ fun DirectoryView(
     onReload: () -> Unit,
     onFilePress: (file: DavResource) -> Unit,
     onCreateFolder: (name: String) -> Unit,
+    onCreateFile: (name: String) -> Unit,
 ) {
-    val alertDisplayedState = remember { mutableStateOf(false) }
+    val toast = makeToast()
+    val folderCreationNameConfirmationVisibilityState = remember { mutableStateOf(false) }
+    val fileCreationNameConfirmationVisibilityState = remember { mutableStateOf(false) }
 
-    CreateFolderDialog(
-        visibilityState = alertDisplayedState,
-        onCreateFolder = onCreateFolder
+    CreateDavResourceDialog(
+        visibilityState = folderCreationNameConfirmationVisibilityState,
+        onNameValidationFailed = { toast("Введите корректное имя папки") },
+        onCreateRequest = onCreateFolder
+    )
+    CreateDavResourceDialog(
+        visibilityState = fileCreationNameConfirmationVisibilityState,
+        onNameValidationFailed = { toast("Введите корректное имя файла") },
+        onCreateRequest = onCreateFile
     )
     PageContainer(
         priorButton = {
@@ -54,13 +63,15 @@ fun DirectoryView(
                     object : ContextMenuItem {
                         override val id = "ID_CREATE_DIRECTORY"
                         override val title = "Создать папку здесь"
-                        override fun onClick(id: String) { alertDisplayedState.value = true }
+                        override fun onClick(id: String) {
+                            folderCreationNameConfirmationVisibilityState.value = true
+                        }
                     },
                     object : ContextMenuItem {
                         override val id = "ID_CREATE_FILE"
                         override val title = "Создать файл"
                         override fun onClick(id: String) {
-                            TODO("Not yet implemented")
+                            fileCreationNameConfirmationVisibilityState.value = true
                         }
                     }
                 ),

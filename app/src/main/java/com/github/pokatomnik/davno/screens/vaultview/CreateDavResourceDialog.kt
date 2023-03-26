@@ -18,12 +18,13 @@ import com.github.pokatomnik.davno.ui.components.SMALL_PADDING
 import com.github.pokatomnik.davno.ui.components.makeToast
 
 @Composable
-fun CreateFolderDialog(
+fun CreateDavResourceDialog(
     visibilityState: MutableState<Boolean>,
-    onCreateFolder: (name: String) -> Unit,
+    onNameValidationFailed: () -> Unit,
+    onCreateRequest: (name: String) -> Unit,
 ) {
     val toast = makeToast()
-    val textState = remember { mutableStateOf("") }
+    val nameState = remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
 
     if (!visibilityState.value) return
@@ -47,8 +48,8 @@ fun CreateFolderDialog(
                 Text(text = "Имя новой папки", fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(SMALL_PADDING.dp))
                 TextField(
-                    value = textState.value,
-                    onValueChange = { textState.value = it },
+                    value = nameState.value,
+                    onValueChange = { nameState.value = it },
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester),
@@ -62,7 +63,7 @@ fun CreateFolderDialog(
                     TextButton(
                         onClick = {
                             visibilityState.value = false
-                            textState.value = ""
+                            nameState.value = ""
                         }
                     ) {
                         Text(text = "Отмена")
@@ -70,13 +71,13 @@ fun CreateFolderDialog(
                     Spacer(modifier = Modifier.width(SMALL_PADDING.dp))
                     TextButton(
                         onClick = {
-                            val name = textState.value
+                            val name = nameState.value
                             if (name.allowedFilesystemName()) {
                                 visibilityState.value = false
-                                textState.value = ""
-                                onCreateFolder(name)
+                                nameState.value = ""
+                                onCreateRequest(name)
                             } else {
-                                toast("Введите корректное имя папки")
+                                onNameValidationFailed()
                             }
                         }
                     ) {

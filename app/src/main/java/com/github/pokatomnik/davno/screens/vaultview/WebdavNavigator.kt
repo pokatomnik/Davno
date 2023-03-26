@@ -82,14 +82,29 @@ fun WebdavNavigator(
     }
 
     val handleCreateFolder: (name: String) -> Unit = { name ->
+        val absoluteDirectoryPath = joinPaths(vaultLocation, name)
         coroutineScope.launch {
             try {
-                webdavStorage.createDirectory(joinPaths(vaultLocation, name))
+                webdavStorage.createDirectory(absoluteDirectoryPath)
                 toast("Папка $name успешно создана")
                 reloadDavResources()
             } catch (e : Exception) {
                 val errorMessage = e.message ?: "Неизвестная ошибка"
                 toast("Не удалось создать папку. Ошибка: $errorMessage")
+            }
+        }
+    }
+
+    val handleCreateFile: (name: String) -> Unit = { name ->
+        val absoluteFilePath = joinPaths(vaultLocation, "$name.md")
+        coroutineScope.launch {
+            try {
+                webdavStorage.putFile(absoluteFilePath, "")
+                toast("Файл $name успешно создан")
+                reloadDavResources()
+            } catch (e : Exception) {
+                val errorMessage = e.message ?: "Неизвестная ошибка"
+                toast("Не удалось создать файл. Ошибка: $errorMessage")
             }
         }
     }
@@ -103,6 +118,7 @@ fun WebdavNavigator(
             onReload = reloadDavResources,
             onFilePress = handleFilePress,
             onCreateFolder = handleCreateFolder,
+            onCreateFile = handleCreateFile,
         )
         else -> FileOpener(
             path = selectedDavResource.path,
