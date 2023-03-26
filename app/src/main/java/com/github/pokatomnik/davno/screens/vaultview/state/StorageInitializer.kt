@@ -1,4 +1,4 @@
-package com.github.pokatomnik.davno.screens.vaultview
+package com.github.pokatomnik.davno.screens.vaultview.state
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -9,7 +9,7 @@ import com.github.pokatomnik.davno.services.db.dao.vaults.Vault
 import com.github.pokatomnik.davno.services.db.rememberDavnoDatabase
 
 @Composable
-fun rememberLocalWebdavStorage(vaultId: Long): WebdavStorage? {
+fun rememberVaultWebdavStorage(vaultId: Long): WebdavStorage? {
     val vaultsDAO = rememberDavnoDatabase().vaultsDAO()
 
     val vaultState = remember(vaultId) {

@@ -12,7 +12,7 @@ import com.github.pokatomnik.davno.navigation.rememberNavigation
 import com.github.pokatomnik.davno.screens.vaultadd.VaultAdd
 import com.github.pokatomnik.davno.screens.vaultedit.VaultEdit
 import com.github.pokatomnik.davno.screens.vaultselector.VaultSelector
-import com.github.pokatomnik.davno.screens.vaultview.VaultView
+import com.github.pokatomnik.davno.screens.vaultview.VaultViewMain
 import com.github.pokatomnik.davno.ui.components.screen
 import com.github.pokatomnik.davno.ui.widgets.DavnoBottomNavigation
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -68,7 +68,7 @@ fun AppComposable() {
                     }
                     screen(route = navigation.vaultViewRoute.route) {
                         navigation.vaultViewRoute.Params { vaultId, vaultLocation ->
-                            VaultView(
+                            VaultViewMain(
                                 vaultId = vaultId.toLong(),
                                 vaultLocation = vaultLocation,
                                 onNavigateToVaultLocation = { newVaultLocation ->

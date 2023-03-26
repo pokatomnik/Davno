@@ -1,7 +1,8 @@
-package com.github.pokatomnik.davno.screens.vaultview
+package com.github.pokatomnik.davno.screens.vaultview.file
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.*
+import com.github.pokatomnik.davno.screens.vaultview.state.DavResourceState
 import com.github.pokatomnik.davno.services.storage.WebdavStorage
 import kotlinx.coroutines.launch
 
@@ -58,7 +59,7 @@ fun FileOpener(
         reloadDavResourceText()
     }
 
-    BackHandler(enabled = true, onBack = onExit);
+    BackHandler(enabled = true, onBack = onExit)
 
     when (modeState.value) {
         ViewMode.View -> FileView(

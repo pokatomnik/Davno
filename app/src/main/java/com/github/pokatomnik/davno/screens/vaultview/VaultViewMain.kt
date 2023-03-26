@@ -1,19 +1,19 @@
 package com.github.pokatomnik.davno.screens.vaultview
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import com.github.pokatomnik.davno.screens.vaultview.state.rememberVaultWebdavStorage
 
 @Composable
-fun VaultView(
+fun VaultViewMain(
     vaultId: Long,
     vaultLocation: String,
     onNavigateToVaultLocation: (vaultLocation: String) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
-    val webdavStorage = rememberLocalWebdavStorage(vaultId = vaultId)
+    val webdavStorage = rememberVaultWebdavStorage(vaultId = vaultId)
 
     webdavStorage?.let {
-        WebdavNavigator(
+        VaultStorageView(
             vaultLocation = vaultLocation,
             onNavigateToVaultLocation = onNavigateToVaultLocation,
             webdavStorage = webdavStorage,

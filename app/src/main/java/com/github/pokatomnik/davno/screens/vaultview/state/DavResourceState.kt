@@ -1,4 +1,4 @@
-package com.github.pokatomnik.davno.screens.vaultview
+package com.github.pokatomnik.davno.screens.vaultview.state
 
 data class DavResourceState<T : Any>(
     val isLoading: Boolean,

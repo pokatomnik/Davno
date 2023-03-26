@@ -1,4 +1,4 @@
-package com.github.pokatomnik.davno.screens.vaultview
+package com.github.pokatomnik.davno.screens.vaultview.directory
 
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -13,6 +13,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.text.font.FontWeight
+import com.github.pokatomnik.davno.screens.vaultview.state.DavResourceState
 import com.github.pokatomnik.davno.services.storage.lastPathPartOrEmpty
 import com.github.pokatomnik.davno.services.storage.up
 import com.github.pokatomnik.davno.ui.components.*
@@ -21,7 +22,7 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.thegrizzlylabs.sardineandroid.DavResource
 
 @Composable
-fun DirectoryView(
+fun DirectoryLister(
     vaultLocation: String,
     directoryListState: MutableState<DavResourceState<List<DavResource>>>,
     onNavigateToVaultLocation: (vaultLocation: String) -> Unit,

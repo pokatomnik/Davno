@@ -1,4 +1,4 @@
-package com.github.pokatomnik.davno.screens.vaultview
+package com.github.pokatomnik.davno.screens.vaultview.directory
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

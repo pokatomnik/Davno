@@ -1,4 +1,4 @@
-package com.github.pokatomnik.davno.screens.vaultview
+package com.github.pokatomnik.davno.screens.vaultview.file
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

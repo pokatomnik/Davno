@@ -1,6 +1,9 @@
 package com.github.pokatomnik.davno.screens.vaultview
 
 import androidx.compose.runtime.*
+import com.github.pokatomnik.davno.screens.vaultview.directory.DirectoryLister
+import com.github.pokatomnik.davno.screens.vaultview.file.FileOpener
+import com.github.pokatomnik.davno.screens.vaultview.state.DavResourceState
 import com.github.pokatomnik.davno.services.storage.WebdavStorage
 import com.github.pokatomnik.davno.services.storage.joinPaths
 import com.github.pokatomnik.davno.ui.components.makeToast
@@ -8,7 +11,7 @@ import com.thegrizzlylabs.sardineandroid.DavResource
 import kotlinx.coroutines.launch
 
 @Composable
-fun WebdavNavigator(
+fun VaultStorageView(
     vaultLocation: String,
     onNavigateToVaultLocation: (vaultLocation: String) -> Unit,
     webdavStorage: WebdavStorage,
@@ -128,7 +131,7 @@ fun WebdavNavigator(
     }
 
     when (val selectedDavResource = selectedDavResourceState.value) {
-        null -> DirectoryView(
+        null -> DirectoryLister(
             vaultLocation = vaultLocation,
             onNavigateToVaultLocation = onNavigateToVaultLocation,
             directoryListState = directoryListState,
