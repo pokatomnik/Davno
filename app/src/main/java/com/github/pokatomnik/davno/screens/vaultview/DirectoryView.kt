@@ -2,6 +2,7 @@ package com.github.pokatomnik.davno.screens.vaultview
 
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Description
@@ -11,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.text.font.FontWeight
 import com.github.pokatomnik.davno.services.storage.lastPathPartOrEmpty
 import com.github.pokatomnik.davno.services.storage.up
 import com.github.pokatomnik.davno.ui.components.*
@@ -35,11 +37,13 @@ fun DirectoryView(
     val fileCreationNameConfirmationVisibilityState = remember { mutableStateOf(false) }
 
     CreateDavResourceDialog(
+        title = { Text(text = "Имя новой папки", fontWeight = FontWeight.Bold) },
         visibilityState = folderCreationNameConfirmationVisibilityState,
         onNameValidationFailed = { toast("Введите корректное имя папки") },
         onCreateRequest = onCreateFolder
     )
     CreateDavResourceDialog(
+        title = { Text(text = "Имя нового файла", fontWeight = FontWeight.Bold) },
         visibilityState = fileCreationNameConfirmationVisibilityState,
         onNameValidationFailed = { toast("Введите корректное имя файла") },
         onCreateRequest = onCreateFile
