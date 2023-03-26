@@ -109,6 +109,24 @@ fun WebdavNavigator(
         }
     }
 
+    val handleRemoveDavResource: (davResourcePath: DavResource) -> Unit = { davResource ->
+        val message = if (davResource.isDirectory) {
+            "Папка ${davResource.name} успешно удалена"
+        } else {
+            "ФАйл ${davResource.name} успешно удален"
+        }
+        coroutineScope.launch {
+            try {
+                webdavStorage.delete(davResource.path)
+                toast(message)
+                reloadDavResources()
+            } catch (e : Exception) {
+                val errorMessage = e.message ?: "Неизвестная ошибка"
+                toast("Не удалось удалить. Ошибка: $errorMessage")
+            }
+        }
+    }
+
     when (val selectedDavResource = selectedDavResourceState.value) {
         null -> DirectoryView(
             vaultLocation = vaultLocation,
@@ -119,6 +137,7 @@ fun WebdavNavigator(
             onFilePress = handleFilePress,
             onCreateFolder = handleCreateFolder,
             onCreateFile = handleCreateFile,
+            onRemoveDavResource = handleRemoveDavResource
         )
         else -> FileOpener(
             path = selectedDavResource.path,

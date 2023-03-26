@@ -28,6 +28,7 @@ fun DirectoryView(
     onFilePress: (file: DavResource) -> Unit,
     onCreateFolder: (name: String) -> Unit,
     onCreateFile: (name: String) -> Unit,
+    onRemoveDavResource: (davResource: DavResource) -> Unit,
 ) {
     val toast = makeToast()
     val folderCreationNameConfirmationVisibilityState = remember { mutableStateOf(false) }
@@ -96,6 +97,7 @@ fun DirectoryView(
             LazyList(
                 list = directoryListState.value.data,
                 renderItem = { index, davResource ->
+                    val contextMenuDisplayedState = remember { mutableStateOf(false) }
                     when (index) {
                         0 -> if (vaultLocation == "/") return@LazyList else IconicListNavItem(
                             title = "..",
@@ -105,22 +107,39 @@ fun DirectoryView(
                                 onNavigateToVaultLocation(davResource.path.up())
                             }
                         )
-                        else -> IconicListNavItem(
-                            title = davResource.name,
-                            icon = when (davResource.isDirectory) {
-                                true -> Icons.Filled.Folder
-                                false -> Icons.Filled.Description
-                            },
-                            iconContentDescription = when (davResource.isDirectory) {
-                                true -> "Папка \"${davResource.name}\""
-                                false -> "Файл \"${davResource.name}\""
-                            },
-                            onPress = {
-                                if (davResource.isDirectory) {
-                                    onNavigateToVaultLocation(davResource.path)
-                                } else {
-                                    onFilePress(davResource)
+                        else -> ContextMenu(
+                            expanded = contextMenuDisplayedState.value,
+                            items = listOf(
+                                object : ContextMenuItem {
+                                    override val id = "ID_REMOVE"
+                                    override val title = "Удалить"
+                                    override fun onClick(id: String) {
+                                        // TODO implement removal confirmation here
+                                        onRemoveDavResource(davResource)
+                                    }
                                 }
+                            ),
+                            onDismiss = { contextMenuDisplayedState.value = false },
+                            content = {
+                                IconicListNavItem(
+                                    title = davResource.name,
+                                    icon = when (davResource.isDirectory) {
+                                        true -> Icons.Filled.Folder
+                                        false -> Icons.Filled.Description
+                                    },
+                                    iconContentDescription = when (davResource.isDirectory) {
+                                        true -> "Папка \"${davResource.name}\""
+                                        false -> "Файл \"${davResource.name}\""
+                                    },
+                                    onPress = {
+                                        if (davResource.isDirectory) {
+                                            onNavigateToVaultLocation(davResource.path)
+                                        } else {
+                                            onFilePress(davResource)
+                                        }
+                                    },
+                                    onLongPress = { contextMenuDisplayedState.value = true }
+                                )
                             }
                         )
                     }
