@@ -104,25 +104,34 @@ class Navigation(
             get() = "/vault/edit/{$VAULT_ID_KEY}"
     }
 
-    val vaultViewRoute = object : RouteSingleParameter {
+    val vaultViewRoute = object : RouteTwoParameters {
         private val VAULT_ID_KEY = "VAULT_ID_KEY"
 
-        override fun navigate(id: String) {
-            navController.navigateDistinct("/vault/view/$id")
+        private val VAULT_LOCATION_KEY = "VAULT_LOCATION_KEY"
+
+        override fun navigate(vaultId: String, vaultLocation: String) {
+            val serializedVaultLocation = serializer.serialize(vaultLocation)
+            navController.navigateAllowSame("/vault/view/$vaultId/$serializedVaultLocation")
         }
 
         @Composable
-        override fun Params(content: @Composable (id: String) -> Unit) {
-            navController
+        override fun Params(content: @Composable (id: String, vaultLocation: String) -> Unit) {
+            val arguments = navController
                 .currentBackStackEntryAsState()
                 .value
                 ?.arguments
+            val vaultId = arguments
                 ?.getString(VAULT_ID_KEY)
                 .let { rememberLastNonNull(it) }
-                ?.let { content(it) }
+            val vaultLocation = arguments
+                ?.getString(VAULT_LOCATION_KEY)
+                ?.let(serializer::parse)
+                .let { rememberLastNonNull(it) }
+
+            vaultId?.let { content(vaultId, vaultLocation ?: "/") }
         }
 
         override val route: String
-            get() = "/vault/view/{$VAULT_ID_KEY}"
+            get() = "/vault/view/{$VAULT_ID_KEY}/{$VAULT_LOCATION_KEY}"
     }
 }

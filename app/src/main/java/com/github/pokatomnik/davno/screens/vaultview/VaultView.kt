@@ -6,16 +6,18 @@ import androidx.compose.runtime.remember
 @Composable
 fun VaultView(
     vaultId: Long,
-    onNavigateBackToVaultSelector: () -> Unit,
+    vaultLocation: String,
+    onNavigateToVaultLocation: (vaultLocation: String) -> Unit,
+    onNavigateBack: () -> Unit,
 ) {
     val webdavStorage = rememberLocalWebdavStorage(vaultId = vaultId)
-    val currentHistoryState = rememberHistory(initialValue = "/")
 
     webdavStorage?.let {
         WebdavNavigator(
-            history = currentHistoryState,
+            vaultLocation = vaultLocation,
+            onNavigateToVaultLocation = onNavigateToVaultLocation,
             webdavStorage = webdavStorage,
-            onNavigateBackToVaultSelector = onNavigateBackToVaultSelector
+            onNavigateBack = onNavigateBack
         )
     }
 }

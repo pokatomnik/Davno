@@ -20,8 +20,9 @@ import com.thegrizzlylabs.sardineandroid.DavResource
 
 @Composable
 fun DirectoryView(
-    history: History<String>,
+    vaultLocation: String,
     directoryListState: MutableState<DavResourceState<List<DavResource>>>,
+    onNavigateToVaultLocation: (vaultLocation: String) -> Unit,
     onNavigateBack: () -> Unit,
     onReload: () -> Unit,
     onFilePress: (file: DavResource) -> Unit,
@@ -43,26 +44,26 @@ fun DirectoryView(
             }
         },
         header = {
-            PageTitle(title = history.currentValue.lastPathPartOrEmpty().ifEmpty { "/" })
+            PageTitle(title = vaultLocation.lastPathPartOrEmpty().ifEmpty { "/" })
         },
         trailingButton = {
             val menuDisplayedState = remember { mutableStateOf(false) }
             ContextMenu(
                 expanded = menuDisplayedState.value,
-                items = (if (history.canGoForward) listOf(
+                items = listOf(
                     object : ContextMenuItem {
-                        override val id = "ID_GO_FORWARD"
-                        override val title = "Вперед"
-                        override fun onClick(id: String) { history.moveForward() }
-                    }
-                ) else listOf()) +
-                    listOf(
-                        object : ContextMenuItem {
-                            override val id = "ID_CREATE_DIRECTORY"
-                            override val title = "Создать папку здесь"
-                            override fun onClick(id: String) { alertDisplayedState.value = true }
+                        override val id = "ID_CREATE_DIRECTORY"
+                        override val title = "Создать папку здесь"
+                        override fun onClick(id: String) { alertDisplayedState.value = true }
+                    },
+                    object : ContextMenuItem {
+                        override val id = "ID_CREATE_FILE"
+                        override val title = "Создать файл"
+                        override fun onClick(id: String) {
+                            TODO("Not yet implemented")
                         }
-                    ),
+                    }
+                ),
                 onDismiss = { menuDisplayedState.value = false },
                 content = {
                     IconButton(onClick = { menuDisplayedState.value = true }) {
@@ -85,12 +86,12 @@ fun DirectoryView(
                 list = directoryListState.value.data,
                 renderItem = { index, davResource ->
                     when (index) {
-                        0 -> if (history.currentValue == "/") return@LazyList else IconicListNavItem(
+                        0 -> if (vaultLocation == "/") return@LazyList else IconicListNavItem(
                             title = "..",
                             icon = Icons.Filled.Folder,
                             iconContentDescription = "Папка \"${davResource.path.up()}\"",
                             onPress = {
-                                history.push(davResource.path.up())
+                                onNavigateToVaultLocation(davResource.path.up())
                             }
                         )
                         else -> IconicListNavItem(
@@ -105,7 +106,7 @@ fun DirectoryView(
                             },
                             onPress = {
                                 if (davResource.isDirectory) {
-                                    history.push(davResource.path)
+                                    onNavigateToVaultLocation(davResource.path)
                                 } else {
                                     onFilePress(davResource)
                                 }

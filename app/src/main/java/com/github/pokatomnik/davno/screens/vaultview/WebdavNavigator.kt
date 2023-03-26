@@ -9,13 +9,14 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun WebdavNavigator(
-    history: History<String>,
+    vaultLocation: String,
+    onNavigateToVaultLocation: (vaultLocation: String) -> Unit,
     webdavStorage: WebdavStorage,
-    onNavigateBackToVaultSelector: () -> Unit,
+    onNavigateBack: () -> Unit,
 ) {
     val toast = makeToast()
     val coroutineScope = rememberCoroutineScope()
-    val directoryListState = remember(history.currentValue, webdavStorage) {
+    val directoryListState = remember {
         mutableStateOf(
             DavResourceState<List<DavResource>>(
                 isLoading = false,
@@ -36,7 +37,7 @@ fun WebdavNavigator(
                 data = directoryListState.value.data
             )
             directoryListState.value = try {
-                val davResources = webdavStorage.list(history.currentValue)
+                val davResources = webdavStorage.list(vaultLocation)
                 DavResourceState(
                     isLoading = false,
                     errorText = null,
@@ -72,16 +73,8 @@ fun WebdavNavigator(
         }
     }
 
-    LaunchedEffect(webdavStorage, history.currentValue) {
+    LaunchedEffect(webdavStorage, vaultLocation) {
         reloadDavResources()
-    }
-
-    val handleNavigateBack: () -> Unit = {
-        if (history.canGoBackward) {
-            history.moveBackward()
-        } else {
-            onNavigateBackToVaultSelector()
-        }
     }
 
     val handleFilePress: (davResource: DavResource) -> Unit = { davResource ->
@@ -91,7 +84,7 @@ fun WebdavNavigator(
     val handleCreateFolder: (name: String) -> Unit = { name ->
         coroutineScope.launch {
             try {
-                webdavStorage.createDirectory(joinPaths(history.currentValue, name))
+                webdavStorage.createDirectory(joinPaths(vaultLocation, name))
                 toast("Папка $name успешно создана")
                 reloadDavResources()
             } catch (e : Exception) {
@@ -103,9 +96,10 @@ fun WebdavNavigator(
 
     when (val selectedDavResource = selectedDavResourceState.value) {
         null -> DirectoryView(
-            history = history,
+            vaultLocation = vaultLocation,
+            onNavigateToVaultLocation = onNavigateToVaultLocation,
             directoryListState = directoryListState,
-            onNavigateBack = handleNavigateBack,
+            onNavigateBack = onNavigateBack,
             onReload = reloadDavResources,
             onFilePress = handleFilePress,
             onCreateFolder = handleCreateFolder,

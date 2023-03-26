@@ -36,7 +36,7 @@ fun AppComposable() {
                         navigation.vaultSelectorRoute.Params {
                             VaultSelector(
                                 onNavigateToVault = { vaultId ->
-                                    navigation.vaultViewRoute.navigate(vaultId.toString())
+                                    navigation.vaultViewRoute.navigate(vaultId.toString(), "/")
                                 },
                                 onNavigateToVaultAdd = {
                                     navigation.vaultAddRoute.navigate()
@@ -67,10 +67,14 @@ fun AppComposable() {
                         }
                     }
                     screen(route = navigation.vaultViewRoute.route) {
-                        navigation.vaultViewRoute.Params { vaultId ->
+                        navigation.vaultViewRoute.Params { vaultId, vaultLocation ->
                             VaultView(
                                 vaultId = vaultId.toLong(),
-                                onNavigateBackToVaultSelector = {
+                                vaultLocation = vaultLocation,
+                                onNavigateToVaultLocation = { newVaultLocation ->
+                                    navigation.vaultViewRoute.navigate(vaultId, newVaultLocation)
+                                },
+                                onNavigateBack = {
                                     navigation.navigateBack()
                                 }
                             )
