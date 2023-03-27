@@ -4,6 +4,8 @@ import androidx.compose.runtime.*
 import com.github.pokatomnik.davno.screens.vaultview.directory.DirectoryLister
 import com.github.pokatomnik.davno.screens.vaultview.file.FileOpener
 import com.github.pokatomnik.davno.screens.vaultview.state.DavResourceState
+import com.github.pokatomnik.davno.services.clipboard.ClipboardIntentionId
+import com.github.pokatomnik.davno.services.clipboard.DavnoClipboard
 import com.github.pokatomnik.davno.services.storage.WebdavStorage
 import com.github.pokatomnik.davno.services.storage.joinPaths
 import com.github.pokatomnik.davno.ui.components.makeToast
@@ -15,6 +17,7 @@ fun VaultStorageView(
     vaultLocation: String,
     onNavigateToVaultLocation: (vaultLocation: String) -> Unit,
     webdavStorage: WebdavStorage,
+    clipboard: DavnoClipboard,
     onNavigateBack: () -> Unit,
 ) {
     val toast = makeToast()
@@ -76,10 +79,6 @@ fun VaultStorageView(
         }
     }
 
-    LaunchedEffect(webdavStorage, vaultLocation) {
-        reloadDavResources()
-    }
-
     val handleFilePress: (davResource: DavResource) -> Unit = { davResource ->
         selectedDavResourceState.value = davResource
     }
@@ -130,17 +129,48 @@ fun VaultStorageView(
         }
     }
 
+    val handlePasteFiles: (ClipboardIntentionId, List<DavResource>) -> Unit = {
+            intentionId,
+            filesToPaste ->
+        when (intentionId) {
+            ClipboardIntentionId.Copy -> filesToPaste.forEach { fileToCopy ->
+                coroutineScope.launch {
+                    webdavStorage.copyFile(
+                        relativePathFrom = fileToCopy.path,
+                        relativePathTo = joinPaths(vaultLocation, fileToCopy.name)
+                    )
+                    reloadDavResources()
+                }
+            }
+            ClipboardIntentionId.Cut -> filesToPaste.forEach { fileToMove ->
+                coroutineScope.launch {
+                    webdavStorage.moveFile(
+                        relativePathFrom = fileToMove.path,
+                        relativePathTo = joinPaths(vaultLocation, fileToMove.name)
+                    )
+                    reloadDavResources()
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(webdavStorage, vaultLocation) {
+        reloadDavResources()
+    }
+
     when (val selectedDavResource = selectedDavResourceState.value) {
         null -> DirectoryLister(
             vaultLocation = vaultLocation,
             onNavigateToVaultLocation = onNavigateToVaultLocation,
             directoryListState = directoryListState,
+            clipboard = clipboard,
             onNavigateBack = onNavigateBack,
             onReload = reloadDavResources,
             onFilePress = handleFilePress,
             onCreateFolder = handleCreateFolder,
             onCreateFile = handleCreateFile,
-            onRemoveDavResource = handleRemoveDavResource
+            onRemoveDavResource = handleRemoveDavResource,
+            onPasteFiles = handlePasteFiles,
         )
         else -> FileOpener(
             path = selectedDavResource.path,

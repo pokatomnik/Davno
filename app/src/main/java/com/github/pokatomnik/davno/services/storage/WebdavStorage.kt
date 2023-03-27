@@ -79,6 +79,8 @@ class WebdavStorage(
         sardine.move(absolutePathFrom, absolutePathTo, true)
     }
 
+    // TODO add rename
+
     /**
      * Copies a file. Overwrites if a destination file exists.
      */
