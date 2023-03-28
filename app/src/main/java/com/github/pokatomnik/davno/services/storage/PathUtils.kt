@@ -1,7 +1,7 @@
 package com.github.pokatomnik.davno.services.storage
 
 private fun removeSlashes(input: String): String {
-    return input.removePrefix("/").removeSuffix("/");
+    return input.removePrefix("/").removeSuffix("/")
 }
 
 private fun joinTwoPaths(path1: String, path2: String): String {
@@ -37,7 +37,7 @@ fun String.ensureHasExtension(extension: String): String {
     return if (this.endsWith(".$extension")) {
         this
     } else {
-        "this.$extension"
+        "$this.$extension"
     }
 }
 
