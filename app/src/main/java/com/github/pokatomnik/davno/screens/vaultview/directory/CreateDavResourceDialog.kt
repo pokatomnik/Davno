@@ -54,7 +54,8 @@ fun CreateDavResourceDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(focusRequester),
-                    maxLines = 1
+                    maxLines = 1,
+                    singleLine = true,
                 )
                 Spacer(modifier = Modifier.height(SMALL_PADDING.dp))
                 Row(
