@@ -1,5 +1,6 @@
 package com.github.pokatomnik.davno
 
+import com.github.pokatomnik.davno.services.storage.ensureHasExtension
 import com.github.pokatomnik.davno.services.storage.fileExt
 import com.github.pokatomnik.davno.services.storage.lastPathPartOrEmpty
 import org.junit.Test
@@ -40,5 +41,17 @@ class PathUtilsTest {
     fun `PathUtils test last part empty`() {
         val lastPart = "".lastPathPartOrEmpty()
         assertEquals("", lastPart)
+    }
+
+    @Test
+    fun `PathUtils test if file name with extension has an extension`() {
+        val name = "/a/b/c/file.md".ensureHasExtension("md")
+        assertEquals("/a/b/c/file.md", name)
+    }
+
+    @Test
+    fun `PathUtils test if file name without extension has an extension`() {
+        val name = "/a/b/c/file".ensureHasExtension("md")
+        assertEquals("/a/b/c/file.md", name)
     }
 }

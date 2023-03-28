@@ -1,7 +1,7 @@
 package com.github.pokatomnik.davno.services.storage
 
 private fun removeSlashes(input: String): String {
-    return input.removePrefix("/").removeSuffix("/");
+    return input.removePrefix("/").removeSuffix("/")
 }
 
 private fun joinTwoPaths(path1: String, path2: String): String {
@@ -24,6 +24,21 @@ fun String.up(): String {
         .dropLast(1)
         .joinToString("/")
     return if (startsWithSlash) "/$parent" else parent
+}
+
+/**
+ * Ensures the string as a file has an extention.
+ * Provided argument should be an extension string
+ * without dot.
+ *
+ * Example: `md`, 'txt', etc.
+ */
+fun String.ensureHasExtension(extension: String): String {
+    return if (this.endsWith(".$extension")) {
+        this
+    } else {
+        "$this.$extension"
+    }
 }
 
 fun String.fileExt(): String {
