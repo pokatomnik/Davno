@@ -15,6 +15,7 @@ import com.github.pokatomnik.davno.services.clipboard.ClipboardIntentionId
 import com.github.pokatomnik.davno.services.clipboard.DavnoClipboard
 import com.github.pokatomnik.davno.services.storage.lastPathPartOrEmpty
 import com.github.pokatomnik.davno.services.storage.up
+import com.github.pokatomnik.davno.services.usermessage.rememberMessageDisplayer
 import com.github.pokatomnik.davno.ui.components.*
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
@@ -37,7 +38,7 @@ fun DirectoryLister(
         filesToPaste: List<DavResource>
     ) -> Unit,
 ) {
-    val toast = makeToast()
+    val messageDisplayer = rememberMessageDisplayer()
     val folderCreationNameConfirmationVisibilityState = remember { mutableStateOf(false) }
     val fileCreationNameConfirmationVisibilityState = remember { mutableStateOf(false) }
 
@@ -58,13 +59,13 @@ fun DirectoryLister(
     CreateDavResourceDialog(
         title = { Text(text = "Имя новой папки", fontWeight = FontWeight.Bold) },
         visibilityState = folderCreationNameConfirmationVisibilityState,
-        onNameValidationFailed = { toast("Введите корректное имя папки") },
+        onNameValidationFailed = { messageDisplayer.display("Введите корректное имя папки") },
         onCreateRequest = onCreateFolder
     )
     CreateDavResourceDialog(
         title = { Text(text = "Имя нового файла", fontWeight = FontWeight.Bold) },
         visibilityState = fileCreationNameConfirmationVisibilityState,
-        onNameValidationFailed = { toast("Введите корректное имя файла") },
+        onNameValidationFailed = { messageDisplayer.display("Введите корректное имя файла") },
         onCreateRequest = onCreateFile
     )
     PageContainer(priorButton = {

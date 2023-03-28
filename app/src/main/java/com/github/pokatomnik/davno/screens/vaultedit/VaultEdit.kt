@@ -14,10 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.github.pokatomnik.davno.services.db.dao.vaults.Vault
 import com.github.pokatomnik.davno.services.db.rememberDavnoDatabase
+import com.github.pokatomnik.davno.services.usermessage.rememberMessageDisplayer
 import com.github.pokatomnik.davno.ui.components.LARGE_PADDING
 import com.github.pokatomnik.davno.ui.components.PageContainer
 import com.github.pokatomnik.davno.ui.components.PageTitle
-import com.github.pokatomnik.davno.ui.components.makeToast
 import com.github.pokatomnik.davno.ui.widgets.VaultForm
 import com.github.pokatomnik.davno.ui.widgets.rememberWebdavConnectionTester
 import kotlinx.coroutines.launch
@@ -29,7 +29,7 @@ fun VaultEdit(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val vaultsDAO = rememberDavnoDatabase().vaultsDAO()
-    val toast = makeToast()
+    val messageDisplayer = rememberMessageDisplayer()
     val webdavConnectionTester = rememberWebdavConnectionTester()
 
     val vaultState = remember {
@@ -55,7 +55,7 @@ fun VaultEdit(
                 userNameState.value.isBlank() ||
                 passwordState.value.isBlank()
         if (areSomeBlank) {
-            toast("Заполните поля")
+            messageDisplayer.display("Заполните поля")
         } else {
             coroutineScope.launch {
                 vaultsDAO.editOneById(
@@ -76,8 +76,8 @@ fun VaultEdit(
             passwordState.value,
             rootUrlState.value
         ).apply {
-            onOk { toast("Соединение установлено") }
-            onFail { toast("Не удалось установить соединение") }
+            onOk { messageDisplayer.display("Соединение установлено") }
+            onFail { messageDisplayer.display("Не удалось установить соединение") }
             test()
         }
     }

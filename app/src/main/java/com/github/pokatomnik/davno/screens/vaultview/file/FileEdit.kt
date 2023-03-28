@@ -14,9 +14,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import com.github.pokatomnik.davno.services.usermessage.rememberMessageDisplayer
 import com.github.pokatomnik.davno.ui.components.PageContainer
 import com.github.pokatomnik.davno.ui.components.PageTitle
-import com.github.pokatomnik.davno.ui.components.makeToast
 
 @Composable
 fun FileEdit(
@@ -26,7 +26,7 @@ fun FileEdit(
     onSave: (content: String) -> Unit,
     onExit: () -> Unit,
 ) {
-    val toast = makeToast()
+    val messageDisplayer = rememberMessageDisplayer()
     val markdownState = remember(contentMarkdownInitial) {
         mutableStateOf(contentMarkdownInitial)
     }
@@ -34,7 +34,7 @@ fun FileEdit(
 
     val handleSave: () -> Unit = {
         if (isLoading) {
-            toast("Подождите, еще загружается")
+            messageDisplayer.display("Подождите, еще загружается")
         } else {
             onSave(markdownState.value)
         }

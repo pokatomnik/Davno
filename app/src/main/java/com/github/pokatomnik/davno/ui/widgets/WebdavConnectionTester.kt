@@ -3,6 +3,7 @@ package com.github.pokatomnik.davno.ui.widgets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import com.github.pokatomnik.davno.services.storage.WebdavStorage
+import com.github.pokatomnik.davno.services.storage.rememberWebdavStorageBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -35,8 +36,9 @@ fun rememberWebdavConnectionTester(): (
     rootUrl: String,
 ) -> WebdavTesterCallbacks {
     val coroutineScope = rememberCoroutineScope()
+    val webdavStorageBuilder = rememberWebdavStorageBuilder()
     return { userName, password, rootUrl ->
-        val webdavStorage = WebdavStorage(
+        val webdavStorage = webdavStorageBuilder.build(
             userName = userName,
             password = password,
             rootPath = rootUrl

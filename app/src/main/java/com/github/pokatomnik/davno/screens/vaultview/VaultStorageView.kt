@@ -8,7 +8,7 @@ import com.github.pokatomnik.davno.services.clipboard.ClipboardIntentionId
 import com.github.pokatomnik.davno.services.clipboard.DavnoClipboard
 import com.github.pokatomnik.davno.services.storage.WebdavStorage
 import com.github.pokatomnik.davno.services.storage.joinPaths
-import com.github.pokatomnik.davno.ui.components.makeToast
+import com.github.pokatomnik.davno.services.usermessage.rememberMessageDisplayer
 import com.thegrizzlylabs.sardineandroid.DavResource
 import kotlinx.coroutines.launch
 
@@ -20,7 +20,7 @@ fun VaultStorageView(
     clipboard: DavnoClipboard,
     onNavigateBack: () -> Unit,
 ) {
-    val toast = makeToast()
+    val messageDisplayer = rememberMessageDisplayer()
     val coroutineScope = rememberCoroutineScope()
     val directoryListState = remember {
         mutableStateOf(
@@ -70,12 +70,17 @@ fun VaultStorageView(
         onDone ->
 
         coroutineScope.launch {
-            webdavStorage.putFile(
-                relativeFilePath = filePath,
-                data = markdownContents
-            )
-            onDone()
-            toast("Файл $fileName успешно сохранен")
+            try {
+                webdavStorage.putFile(
+                    relativeFilePath = filePath,
+                    data = markdownContents
+                )
+                messageDisplayer.display("Файл $fileName успешно сохранен")
+            } catch (e: Exception) {
+                messageDisplayer.display("Ошибка сохранения файла $fileName")
+            } finally {
+                onDone()
+            }
         }
     }
 
@@ -88,11 +93,11 @@ fun VaultStorageView(
         coroutineScope.launch {
             try {
                 webdavStorage.createDirectory(absoluteDirectoryPath)
-                toast("Папка $name успешно создана")
+                messageDisplayer.display("Папка $name успешно создана")
                 reloadDavResources()
             } catch (e : Exception) {
                 val errorMessage = e.message ?: "Неизвестная ошибка"
-                toast("Не удалось создать папку. Ошибка: $errorMessage")
+                messageDisplayer.display("Не удалось создать папку. Ошибка: $errorMessage")
             }
         }
     }
@@ -102,11 +107,11 @@ fun VaultStorageView(
         coroutineScope.launch {
             try {
                 webdavStorage.putFile(absoluteFilePath, "")
-                toast("Файл $name успешно создан")
+                messageDisplayer.display("Файл $name успешно создан")
                 reloadDavResources()
             } catch (e : Exception) {
                 val errorMessage = e.message ?: "Неизвестная ошибка"
-                toast("Не удалось создать файл. Ошибка: $errorMessage")
+                messageDisplayer.display("Не удалось создать файл. Ошибка: $errorMessage")
             }
         }
     }
@@ -120,11 +125,11 @@ fun VaultStorageView(
         coroutineScope.launch {
             try {
                 webdavStorage.delete(davResource.path)
-                toast(message)
+                messageDisplayer.display(message)
                 reloadDavResources()
             } catch (e : Exception) {
                 val errorMessage = e.message ?: "Неизвестная ошибка"
-                toast("Не удалось удалить. Ошибка: $errorMessage")
+                messageDisplayer.display("Не удалось удалить. Ошибка: $errorMessage")
             }
         }
     }
@@ -135,20 +140,28 @@ fun VaultStorageView(
         when (intentionId) {
             ClipboardIntentionId.Copy -> filesToPaste.forEach { fileToCopy ->
                 coroutineScope.launch {
-                    webdavStorage.copyFile(
-                        relativePathFrom = fileToCopy.path,
-                        relativePathTo = joinPaths(vaultLocation, fileToCopy.name)
-                    )
-                    reloadDavResources()
+                    try {
+                        webdavStorage.copyFile(
+                            relativePathFrom = fileToCopy.path,
+                            relativePathTo = joinPaths(vaultLocation, fileToCopy.name)
+                        )
+                        reloadDavResources()
+                    } catch (e: Exception) {
+                        messageDisplayer.display("Ошибка копирования файла")
+                    }
                 }
             }
             ClipboardIntentionId.Cut -> filesToPaste.forEach { fileToMove ->
                 coroutineScope.launch {
-                    webdavStorage.moveFile(
-                        relativePathFrom = fileToMove.path,
-                        relativePathTo = joinPaths(vaultLocation, fileToMove.name)
-                    )
-                    reloadDavResources()
+                    try {
+                        webdavStorage.moveFile(
+                            relativePathFrom = fileToMove.path,
+                            relativePathTo = joinPaths(vaultLocation, fileToMove.name)
+                        )
+                        reloadDavResources()
+                    } catch (e: Exception) {
+                        messageDisplayer.display("Ошибка перемещения файла")
+                    }
                 }
             }
         }
