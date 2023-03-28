@@ -1,5 +1,6 @@
 package com.github.pokatomnik.davno.services.storage
 
+import com.github.pokatomnik.davno.services.logger.DavnoLogger
 import com.github.pokatomnik.davno.services.storage.filters.Markdown
 import com.github.pokatomnik.davno.services.storage.filters.WebdavResourceListFilter
 import com.thegrizzlylabs.sardineandroid.DavResource
@@ -14,6 +15,7 @@ class WebdavStorage(
     private val userName: String,
     private val password: String,
     private val rootPath: String,
+    private val logger: DavnoLogger
 ) {
     private val context = Dispatchers.IO + SupervisorJob()
 
@@ -27,12 +29,16 @@ class WebdavStorage(
 
     suspend fun list(relativePath: String): List<DavResource> = withContext(context) {
         val absolutePath = joinPaths(rootPath, relativePath)
-        val webdavResources = sardine.list(absolutePath)
-        webDavResourceFilters.fold(webdavResources) {
-            currentFilteredList,
-            davFilter ->
-            davFilter.filterWebdavResourceList(currentFilteredList)
+        val webdavResources = try {
+            sardine.list(absolutePath)
+        } catch (e: Exception) {
+            logger.error(
+                message = e.message ?: "Unknown list error",
+                extra = e.stackTraceToString()
+            )
+            throw e
         }
+        normalizeWebdavList(webdavResources, webDavResourceFilters)
     }
 
     suspend fun test(): Boolean {
@@ -46,28 +52,60 @@ class WebdavStorage(
 
     suspend fun getFileContents(relativeFilePath: String): String = withContext(context) {
         val absolutePath = joinPaths(rootPath, relativeFilePath)
-        val inputStream = sardine.get(absolutePath)
+        val inputStream = try {
+            sardine.get(absolutePath)
+        } catch (e: Exception) {
+            logger.error(
+                message = e.message ?: "Unknown getting file contents error",
+                extra = e.stackTraceToString()
+            )
+            throw e
+        }
         val inputStreamReader = InputStreamReader(inputStream)
         inputStreamReader.readText()
     }
 
     suspend fun putFile(relativeFilePath: String, data: String, mime: String = "text/markdown") = withContext(context) {
         val absolutePath = joinPaths(rootPath, relativeFilePath)
-        sardine.put(
-            absolutePath,
-            data.toByteArray(Charset.defaultCharset()),
-            mime
-        )
+        try {
+            sardine.put(
+                absolutePath,
+                data.toByteArray(Charset.defaultCharset()),
+                mime
+            )
+        } catch (e: Exception) {
+            logger.error(
+                message = e.message ?: "Unknown file creation error",
+                extra = e.stackTraceToString()
+            )
+            throw e
+        }
     }
 
     suspend fun delete(relativePath: String) = withContext(context) {
         val absolutePath = joinPaths(rootPath, relativePath)
-        sardine.delete(absolutePath)
+        try {
+            sardine.delete(absolutePath)
+        } catch (e: Exception) {
+            logger.error(
+                message = e.message ?: "Unknown deleting file error",
+                extra = e.stackTraceToString()
+            )
+            throw e
+        }
     }
 
     suspend fun createDirectory(relativePath: String) = withContext(context) {
         val absolutePath = joinPaths(rootPath, relativePath)
-        sardine.createDirectory(absolutePath)
+        try {
+            sardine.createDirectory(absolutePath)
+        } catch (e: Exception) {
+            logger.error(
+                message = e.message ?: "Unknown directory creation error",
+                extra = e.stackTraceToString()
+            )
+            throw e
+        }
     }
 
     /**
@@ -76,7 +114,16 @@ class WebdavStorage(
     suspend fun moveFile(relativePathFrom: String, relativePathTo: String) = withContext(context) {
         val absolutePathFrom = joinPaths(rootPath, relativePathFrom)
         val absolutePathTo = joinPaths(rootPath, relativePathTo)
-        sardine.move(absolutePathFrom, absolutePathTo, true)
+        try {
+            sardine.move(absolutePathFrom, absolutePathTo, true)
+        } catch (e: Exception) {
+            logger.error(
+                message = e.message ?: "Unknown file moving error",
+                extra = e.stackTraceToString()
+            )
+            throw e
+        }
+
     }
 
     // TODO add rename
@@ -87,11 +134,54 @@ class WebdavStorage(
     suspend fun copyFile(relativePathFrom: String, relativePathTo: String) = withContext(context) {
         val absolutePathFrom = joinPaths(rootPath, relativePathFrom)
         val absolutePathTo = joinPaths(rootPath, relativePathTo)
-        sardine.copy(absolutePathFrom, absolutePathTo, true)
+        try {
+            sardine.copy(absolutePathFrom, absolutePathTo, true)
+        } catch (e: Exception) {
+            logger.error(
+                message = e.message ?: "Unknown file copying error",
+                extra = e.stackTraceToString()
+            )
+            throw e
+        }
+
     }
 
     suspend fun existsFile(relativePath: String) = withContext(context) {
         val absolutePath = joinPaths(rootPath, relativePath)
-        sardine.exists(absolutePath)
+        try {
+            sardine.exists(absolutePath)
+        } catch (e: Exception) {
+            logger.error(
+                message = e.message ?: "Unknown file exists checking error",
+                extra = e.stackTraceToString()
+            )
+            throw e
+        }
     }
 }
+
+/**
+ * Places directories at the start of the list
+ * and files at the end of the list,
+ * sorts both.
+ */
+fun normalizeWebdavList(
+    webdavResponse: List<DavResource>,
+    webDavResourceFilters: List<WebdavResourceListFilter>
+) = webDavResourceFilters
+    .fold(webdavResponse) {
+            currentFilteredList,
+            davFilter ->
+        davFilter.filterWebdavResourceList(currentFilteredList)
+    }
+    .sortedWith { a, b ->
+        val bothSameType = (a.isDirectory && b.isDirectory) ||
+                (!a.isDirectory && !b.isDirectory)
+        if (bothSameType) {
+            a.name.compareTo(b.name)
+        } else if (a.isDirectory && !b.isDirectory) {
+            -1
+        } else {
+            1
+        }
+    }
