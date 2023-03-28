@@ -141,7 +141,7 @@ fun VaultStorageView(
             ClipboardIntentionId.Copy -> filesToPaste.forEach { fileToCopy ->
                 coroutineScope.launch {
                     try {
-                        webdavStorage.copyFile(
+                        webdavStorage.copy(
                             relativePathFrom = fileToCopy.path,
                             relativePathTo = joinPaths(vaultLocation, fileToCopy.name)
                         )
@@ -154,7 +154,7 @@ fun VaultStorageView(
             ClipboardIntentionId.Cut -> filesToPaste.forEach { fileToMove ->
                 coroutineScope.launch {
                     try {
-                        webdavStorage.moveFile(
+                        webdavStorage.move(
                             relativePathFrom = fileToMove.path,
                             relativePathTo = joinPaths(vaultLocation, fileToMove.name)
                         )
