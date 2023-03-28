@@ -26,6 +26,21 @@ fun String.up(): String {
     return if (startsWithSlash) "/$parent" else parent
 }
 
+/**
+ * Ensures the string as a file has an extention.
+ * Provided argument should be an extension string
+ * without dot.
+ *
+ * Example: `md`, 'txt', etc.
+ */
+fun String.ensureHasExtension(extension: String): String {
+    return if (this.endsWith(".$extension")) {
+        this
+    } else {
+        "this.$extension"
+    }
+}
+
 fun String.fileExt(): String {
     val parts = this.split('.')
     return if (parts.size == 1) "" else {

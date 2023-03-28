@@ -7,6 +7,7 @@ import com.github.pokatomnik.davno.screens.vaultview.state.DavResourceState
 import com.github.pokatomnik.davno.services.clipboard.ClipboardIntentionId
 import com.github.pokatomnik.davno.services.clipboard.DavnoClipboard
 import com.github.pokatomnik.davno.services.storage.WebdavStorage
+import com.github.pokatomnik.davno.services.storage.ensureHasExtension
 import com.github.pokatomnik.davno.services.storage.joinPaths
 import com.github.pokatomnik.davno.services.usermessage.rememberMessageDisplayer
 import com.thegrizzlylabs.sardineandroid.DavResource
@@ -103,7 +104,7 @@ fun VaultStorageView(
     }
 
     val handleCreateFile: (name: String) -> Unit = { name ->
-        val absoluteFilePath = joinPaths(vaultLocation, "$name.md")
+        val absoluteFilePath = joinPaths(vaultLocation, name.ensureHasExtension("md"))
         coroutineScope.launch {
             try {
                 webdavStorage.putFile(absoluteFilePath, "")
