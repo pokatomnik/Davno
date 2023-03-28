@@ -84,7 +84,7 @@ fun DirectoryLister(
                     override val id: String
                         get() = "ID_PASTE_FROM_CLIPBOARD"
                     override val title: String
-                        get() = "Вставить файл"
+                        get() = "Вставить"
                     override fun onClick(id: String) {
                         handlePasteFilesHere()
                     }
@@ -125,7 +125,7 @@ fun DirectoryLister(
                             onNavigateToVaultLocation(davResource.path.up())
                         })
                     else -> ContextMenu(expanded = contextMenuDisplayedState.value,
-                        items = (if (davResource.isDirectory) listOf<ContextMenuItem>() else listOf(
+                        items = listOf(
                             object : ContextMenuItem {
                                 override val id = "ID_CUT"
                                 override val title = "Вырезать"
@@ -139,14 +139,16 @@ fun DirectoryLister(
                                 override fun onClick(id: String) {
                                     handleCopyFiles(listOf(davResource))
                                 }
-                            })) + listOf(object : ContextMenuItem {
-                            override val id = "ID_REMOVE"
-                            override val title = "Удалить"
-                            override fun onClick(id: String) {
-                                // TODO implement removal confirmation here
-                                onRemoveDavResource(davResource)
+                            },
+                            object : ContextMenuItem {
+                                override val id = "ID_REMOVE"
+                                override val title = "Удалить"
+                                override fun onClick(id: String) {
+                                    // TODO implement removal confirmation here
+                                    onRemoveDavResource(davResource)
+                                }
                             }
-                        }),
+                        ),
                         onDismiss = { contextMenuDisplayedState.value = false },
                         content = {
                             IconicListNavItem(title = davResource.name,

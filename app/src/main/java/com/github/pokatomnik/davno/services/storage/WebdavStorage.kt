@@ -108,10 +108,7 @@ class WebdavStorage(
         }
     }
 
-    /**
-     * Moves a file. Overwrites if a destination file exists.
-     */
-    suspend fun moveFile(relativePathFrom: String, relativePathTo: String) = withContext(context) {
+    suspend fun move(relativePathFrom: String, relativePathTo: String) = withContext(context) {
         val absolutePathFrom = joinPaths(rootPath, relativePathFrom)
         val absolutePathTo = joinPaths(rootPath, relativePathTo)
         try {
@@ -131,7 +128,7 @@ class WebdavStorage(
     /**
      * Copies a file. Overwrites if a destination file exists.
      */
-    suspend fun copyFile(relativePathFrom: String, relativePathTo: String) = withContext(context) {
+    suspend fun copy(relativePathFrom: String, relativePathTo: String) = withContext(context) {
         val absolutePathFrom = joinPaths(rootPath, relativePathFrom)
         val absolutePathTo = joinPaths(rootPath, relativePathTo)
         try {
