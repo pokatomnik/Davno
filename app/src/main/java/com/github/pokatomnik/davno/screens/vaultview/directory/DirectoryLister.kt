@@ -138,6 +138,7 @@ fun DirectoryLister(
                         )
                     } else {
                         val renameDisplayedState = remember { mutableStateOf(false) }
+                        val removalConfirmationState = remember { mutableStateOf(false) }
 
                         CreateDavResourceDialog(
                             title = { Text(text = "Новое имя", fontWeight = FontWeight.Bold) },
@@ -146,6 +147,29 @@ fun DirectoryLister(
                             onNameValidationFailed = { messageDisplayer.display("Введите корректное имя") },
                             onCreateRequest = { newName ->
                                 onRename(davResource.path, newName, davResource.isDirectory)
+                            }
+                        )
+
+                        ConfirmationModal(
+                            visibilityState = removalConfirmationState,
+                            buttonOk = object : ConfirmationModalButton {
+                                override val id = "ID_OK"
+                                override val text = "Удалить"
+                                override fun onClick(id: String) {
+                                    onRemoveDavResource(davResource)
+                                }
+                            },
+                            buttonCancel = object : ConfirmationModalButton {
+                                override val id = "ID_CANCEL"
+                                override val text = "О, нет!"
+                                override fun onClick(id: String) {}
+                            },
+                            confirmationText = {
+                                val type = if (davResource.isDirectory) "папку" else "файл"
+                                Text("Вы действительно хотите удалить $type ${davResource.name}?")
+                            },
+                            title = {
+                                Text("Удаление")
                             }
                         )
 
@@ -176,8 +200,7 @@ fun DirectoryLister(
                                     override val id = "ID_REMOVE"
                                     override val title = "Удалить"
                                     override fun onClick(id: String) {
-                                        // TODO implement removal confirmation here
-                                        onRemoveDavResource(davResource)
+                                        removalConfirmationState.value = true
                                     }
                                 }
                             ),
