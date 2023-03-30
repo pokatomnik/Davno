@@ -21,6 +21,7 @@ import com.github.pokatomnik.davno.ui.components.SMALL_PADDING
 @Composable
 fun CreateDavResourceDialog(
     title: @Composable () -> Unit,
+    primaryButtonText: @Composable () -> Unit,
     visibilityState: MutableState<Boolean>,
     onNameValidationFailed: () -> Unit,
     onCreateRequest: (name: String) -> Unit,
@@ -83,7 +84,7 @@ fun CreateDavResourceDialog(
                             }
                         }
                     ) {
-                        Text(text = "Создать")
+                        primaryButtonText()
                     }
                 }
             }

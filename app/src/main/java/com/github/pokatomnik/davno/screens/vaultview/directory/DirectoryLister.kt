@@ -37,6 +37,7 @@ fun DirectoryLister(
         intention: ClipboardIntentionId,
         filesToPaste: List<DavnoDavResource>
     ) -> Unit,
+    onRename: (path: String, newName: String, isDirectory: Boolean) -> Unit,
 ) {
     val messageDisplayer = rememberMessageDisplayer()
     val folderCreationNameConfirmationVisibilityState = remember { mutableStateOf(false) }
@@ -58,12 +59,14 @@ fun DirectoryLister(
 
     CreateDavResourceDialog(
         title = { Text(text = "Имя новой папки", fontWeight = FontWeight.Bold) },
+        primaryButtonText = { Text(text = "Создать") },
         visibilityState = folderCreationNameConfirmationVisibilityState,
         onNameValidationFailed = { messageDisplayer.display("Введите корректное имя папки") },
         onCreateRequest = onCreateFolder
     )
     CreateDavResourceDialog(
         title = { Text(text = "Имя нового файла", fontWeight = FontWeight.Bold) },
+        primaryButtonText = { Text(text = "Создать") },
         visibilityState = fileCreationNameConfirmationVisibilityState,
         onNameValidationFailed = { messageDisplayer.display("Введите корректное имя файла") },
         onCreateRequest = onCreateFile
@@ -134,6 +137,18 @@ fun DirectoryLister(
                             }
                         )
                     } else {
+                        val renameDisplayedState = remember { mutableStateOf(false) }
+
+                        CreateDavResourceDialog(
+                            title = { Text(text = "Новое имя", fontWeight = FontWeight.Bold) },
+                            primaryButtonText = { Text(text = "Переименовать") },
+                            visibilityState = renameDisplayedState,
+                            onNameValidationFailed = { messageDisplayer.display("Введите корректное имя") },
+                            onCreateRequest = { newName ->
+                                onRename(davResource.path, newName, davResource.isDirectory)
+                            }
+                        )
+
                         ContextMenu(expanded = contextMenuDisplayedState.value,
                             items = listOf(
                                 object : ContextMenuItem {
@@ -148,6 +163,13 @@ fun DirectoryLister(
                                     override val title = "Копировать"
                                     override fun onClick(id: String) {
                                         handleCopyFiles(listOf(davResource))
+                                    }
+                                },
+                                object : ContextMenuItem {
+                                    override val id = "ID_RENAME"
+                                    override val title = "Переименовать"
+                                    override fun onClick(id: String) {
+                                        renameDisplayedState.value = true
                                     }
                                 },
                                 object : ContextMenuItem {

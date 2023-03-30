@@ -168,6 +168,18 @@ fun VaultStorageView(
         }
     }
 
+    val handleRename: (String, String, Boolean) -> Unit = { path, newName, isDirectory ->
+        val actualName = if (isDirectory) newName else newName.ensureHasExtension("md")
+        coroutineScope.launch {
+            try {
+                webdavStorage.rename(path, actualName)
+                reloadDavResources()
+            } catch (e: Exception) {
+                messageDisplayer.display("Ошибка переименования")
+            }
+        }
+    }
+
     LaunchedEffect(webdavStorage, vaultLocation) {
         reloadDavResources()
     }
@@ -185,6 +197,7 @@ fun VaultStorageView(
             onCreateFile = handleCreateFile,
             onRemoveDavResource = handleRemoveDavResource,
             onPasteFiles = handlePasteFiles,
+            onRename = handleRename
         )
         else -> FileOpener(
             path = selectedDavResource.path,

@@ -98,14 +98,26 @@ class WebdavStorage(
             sardine.move(fromPath, toPath, true)
         } catch (e: Exception) {
             logger.error(
-                message = e.message ?: "Unknown file moving error",
+                message = e.message ?: "Unknown moving error",
                 extra = e.stackTraceToString()
             )
             throw e
         }
     }
 
-    // TODO add rename
+    suspend fun rename(path: String, newName: String) = withContext(context) {
+        val parentPath = path.up()
+        val newPath = joinPaths(parentPath, newName)
+        try {
+            sardine.move(path, newPath, false)
+        } catch (e: Exception) {
+            logger.error(
+                message = e.message ?: "Unknown renaming error",
+                extra = e.stackTraceToString(),
+            )
+            throw e
+        }
+    }
 
     /**
      * Copies a file. Overwrites if a destination file exists.
