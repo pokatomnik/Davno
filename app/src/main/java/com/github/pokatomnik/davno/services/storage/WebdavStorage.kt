@@ -1,10 +1,6 @@
 package com.github.pokatomnik.davno.services.storage
 
 import com.github.pokatomnik.davno.services.logger.DavnoLogger
-import com.github.pokatomnik.davno.services.storage.filters.Markdown
-import com.github.pokatomnik.davno.services.storage.filters.WebdavResourceListFilter
-import com.thegrizzlylabs.sardineandroid.DavResource
-import com.thegrizzlylabs.sardineandroid.impl.OkHttpSardine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
@@ -12,25 +8,22 @@ import java.io.InputStreamReader
 import java.nio.charset.Charset
 
 class WebdavStorage(
-    private val userName: String,
-    private val password: String,
-    private val rootPath: String,
+    userName: String,
+    password: String,
+    rootPath: String,
     private val logger: DavnoLogger
 ) {
     private val context = Dispatchers.IO + SupervisorJob()
 
-    private val sardine = OkHttpSardine().apply {
-        setCredentials(userName, password)
-    }
-
-    private val webDavResourceFilters = listOf<WebdavResourceListFilter>(
-        Markdown()
+    private val sardine = DavnoSardine(
+        userName = userName,
+        password = password,
+        rootUrl = rootPath
     )
 
-    suspend fun list(relativePath: String): List<DavResource> = withContext(context) {
-        val absolutePath = joinPaths(rootPath, relativePath)
-        val webdavResources = try {
-            sardine.list(absolutePath)
+    suspend fun list(path: String) = withContext(context) {
+        try {
+            sardine.list(path)
         } catch (e: Exception) {
             logger.error(
                 message = e.message ?: "Unknown list error",
@@ -38,22 +31,20 @@ class WebdavStorage(
             )
             throw e
         }
-        normalizeWebdavList(webdavResources, webDavResourceFilters)
     }
 
     suspend fun test(): Boolean {
         return try {
-            list("/")
+            list(path = "/")
             true
         } catch (e: Exception) {
             false
         }
     }
 
-    suspend fun getFileContents(relativeFilePath: String): String = withContext(context) {
-        val absolutePath = joinPaths(rootPath, relativeFilePath)
+    suspend fun getFileContents(path: String): String = withContext(context) {
         val inputStream = try {
-            sardine.get(absolutePath)
+            sardine.getFileContents(path)
         } catch (e: Exception) {
             logger.error(
                 message = e.message ?: "Unknown getting file contents error",
@@ -65,14 +56,10 @@ class WebdavStorage(
         inputStreamReader.readText()
     }
 
-    suspend fun putFile(relativeFilePath: String, data: String, mime: String = "text/markdown") = withContext(context) {
-        val absolutePath = joinPaths(rootPath, relativeFilePath)
+    suspend fun putFile(path: String, data: String, mime: String = "text/markdown") = withContext(context) {
+        val bytes = data.toByteArray(Charset.defaultCharset())
         try {
-            sardine.put(
-                absolutePath,
-                data.toByteArray(Charset.defaultCharset()),
-                mime
-            )
+            sardine.putFile(path, bytes, mime)
         } catch (e: Exception) {
             logger.error(
                 message = e.message ?: "Unknown file creation error",
@@ -82,10 +69,9 @@ class WebdavStorage(
         }
     }
 
-    suspend fun delete(relativePath: String) = withContext(context) {
-        val absolutePath = joinPaths(rootPath, relativePath)
+    suspend fun delete(path: String) = withContext(context) {
         try {
-            sardine.delete(absolutePath)
+            sardine.delete(path)
         } catch (e: Exception) {
             logger.error(
                 message = e.message ?: "Unknown deleting file error",
@@ -95,10 +81,9 @@ class WebdavStorage(
         }
     }
 
-    suspend fun createDirectory(relativePath: String) = withContext(context) {
-        val absolutePath = joinPaths(rootPath, relativePath)
+    suspend fun createDirectory(path: String) = withContext(context) {
         try {
-            sardine.createDirectory(absolutePath)
+            sardine.createDirectory(path)
         } catch (e: Exception) {
             logger.error(
                 message = e.message ?: "Unknown directory creation error",
@@ -108,11 +93,9 @@ class WebdavStorage(
         }
     }
 
-    suspend fun move(relativePathFrom: String, relativePathTo: String) = withContext(context) {
-        val absolutePathFrom = joinPaths(rootPath, relativePathFrom)
-        val absolutePathTo = joinPaths(rootPath, relativePathTo)
+    suspend fun move(fromPath: String, toPath: String) = withContext(context) {
         try {
-            sardine.move(absolutePathFrom, absolutePathTo, true)
+            sardine.move(fromPath, toPath, true)
         } catch (e: Exception) {
             logger.error(
                 message = e.message ?: "Unknown file moving error",
@@ -120,7 +103,6 @@ class WebdavStorage(
             )
             throw e
         }
-
     }
 
     // TODO add rename
@@ -128,11 +110,9 @@ class WebdavStorage(
     /**
      * Copies a file. Overwrites if a destination file exists.
      */
-    suspend fun copy(relativePathFrom: String, relativePathTo: String) = withContext(context) {
-        val absolutePathFrom = joinPaths(rootPath, relativePathFrom)
-        val absolutePathTo = joinPaths(rootPath, relativePathTo)
+    suspend fun copy(fromPath: String, toPath: String) = withContext(context) {
         try {
-            sardine.copy(absolutePathFrom, absolutePathTo, true)
+            sardine.copy(fromPath, toPath, true)
         } catch (e: Exception) {
             logger.error(
                 message = e.message ?: "Unknown file copying error",
@@ -140,45 +120,5 @@ class WebdavStorage(
             )
             throw e
         }
-
-    }
-
-    suspend fun existsFile(relativePath: String) = withContext(context) {
-        val absolutePath = joinPaths(rootPath, relativePath)
-        try {
-            sardine.exists(absolutePath)
-        } catch (e: Exception) {
-            logger.error(
-                message = e.message ?: "Unknown file exists checking error",
-                extra = e.stackTraceToString()
-            )
-            throw e
-        }
     }
 }
-
-/**
- * Places directories at the start of the list
- * and files at the end of the list,
- * sorts both.
- */
-fun normalizeWebdavList(
-    webdavResponse: List<DavResource>,
-    webDavResourceFilters: List<WebdavResourceListFilter>
-) = webDavResourceFilters
-    .fold(webdavResponse) {
-            currentFilteredList,
-            davFilter ->
-        davFilter.filterWebdavResourceList(currentFilteredList)
-    }
-    .sortedWith { a, b ->
-        val bothSameType = (a.isDirectory && b.isDirectory) ||
-                (!a.isDirectory && !b.isDirectory)
-        if (bothSameType) {
-            a.name.compareTo(b.name)
-        } else if (a.isDirectory && !b.isDirectory) {
-            -1
-        } else {
-            1
-        }
-    }

@@ -1,8 +1,8 @@
 package com.github.pokatomnik.davno.services.clipboard
 
-import com.thegrizzlylabs.sardineandroid.DavResource
+import com.github.pokatomnik.davno.services.storage.DavnoDavResource
 
 data class ClipboardIntention(
     val intentionId: ClipboardIntentionId,
-    val davResources: List<DavResource>
+    val davResources: List<DavnoDavResource>
 )

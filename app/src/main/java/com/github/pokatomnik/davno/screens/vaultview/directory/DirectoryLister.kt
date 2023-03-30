@@ -13,29 +13,29 @@ import androidx.compose.ui.text.font.FontWeight
 import com.github.pokatomnik.davno.screens.vaultview.state.DavResourceState
 import com.github.pokatomnik.davno.services.clipboard.ClipboardIntentionId
 import com.github.pokatomnik.davno.services.clipboard.DavnoClipboard
+import com.github.pokatomnik.davno.services.storage.DavnoDavResource
 import com.github.pokatomnik.davno.services.storage.lastPathPartOrEmpty
 import com.github.pokatomnik.davno.services.storage.up
 import com.github.pokatomnik.davno.services.usermessage.rememberMessageDisplayer
 import com.github.pokatomnik.davno.ui.components.*
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.thegrizzlylabs.sardineandroid.DavResource
 
 @Composable
 fun DirectoryLister(
     vaultLocation: String,
-    directoryListState: MutableState<DavResourceState<List<DavResource>>>,
+    directoryListState: MutableState<DavResourceState<List<DavnoDavResource>>>,
     clipboard: DavnoClipboard,
     onNavigateToVaultLocation: (vaultLocation: String) -> Unit,
     onNavigateBack: () -> Unit,
     onReload: () -> Unit,
-    onFilePress: (file: DavResource) -> Unit,
+    onFilePress: (file: DavnoDavResource) -> Unit,
     onCreateFolder: (name: String) -> Unit,
     onCreateFile: (name: String) -> Unit,
-    onRemoveDavResource: (davResource: DavResource) -> Unit,
+    onRemoveDavResource: (davResource: DavnoDavResource) -> Unit,
     onPasteFiles: (
         intention: ClipboardIntentionId,
-        filesToPaste: List<DavResource>
+        filesToPaste: List<DavnoDavResource>
     ) -> Unit,
 ) {
     val messageDisplayer = rememberMessageDisplayer()
@@ -48,11 +48,11 @@ fun DirectoryLister(
         }
     }
 
-    val handleCopyFiles: (List<DavResource>) -> Unit = { davResources ->
+    val handleCopyFiles: (List<DavnoDavResource>) -> Unit = { davResources ->
         clipboard.copy(davResources)
     }
 
-    val handleCutFiles: (List<DavResource>) -> Unit = { davResources ->
+    val handleCutFiles: (List<DavnoDavResource>) -> Unit = { davResources ->
         clipboard.cut(davResources)
     }
 
@@ -85,6 +85,7 @@ fun DirectoryLister(
                         get() = "ID_PASTE_FROM_CLIPBOARD"
                     override val title: String
                         get() = "Вставить"
+
                     override fun onClick(id: String) {
                         handlePasteFilesHere()
                     }
@@ -115,62 +116,75 @@ fun DirectoryLister(
                 isRefreshing = directoryListState.value.isLoading
             ), onRefresh = onReload
         ) {
-            LazyList(list = directoryListState.value.data, renderItem = { index, davResource ->
-                val contextMenuDisplayedState = remember { mutableStateOf(false) }
-                when (index) {
-                    0 -> if (vaultLocation == "/") return@LazyList else IconicListNavItem(title = "..",
-                        icon = Icons.Filled.Folder,
-                        iconContentDescription = "Папка \"${davResource.path.up()}\"",
-                        onPress = {
-                            onNavigateToVaultLocation(davResource.path.up())
-                        })
-                    else -> ContextMenu(expanded = contextMenuDisplayedState.value,
-                        items = listOf(
-                            object : ContextMenuItem {
-                                override val id = "ID_CUT"
-                                override val title = "Вырезать"
-                                override fun onClick(id: String) {
-                                    handleCutFiles(listOf(davResource))
-                                }
-                            },
-                            object : ContextMenuItem {
-                                override val id = "ID_COPY"
-                                override val title = "Копировать"
-                                override fun onClick(id: String) {
-                                    handleCopyFiles(listOf(davResource))
-                                }
-                            },
-                            object : ContextMenuItem {
-                                override val id = "ID_REMOVE"
-                                override val title = "Удалить"
-                                override fun onClick(id: String) {
-                                    // TODO implement removal confirmation here
-                                    onRemoveDavResource(davResource)
-                                }
+            val list = if (vaultLocation == "/") {
+                directoryListState.value.data
+            } else {
+                listOf<DavnoDavResource?>(null) + directoryListState.value.data
+            }
+            LazyList(
+                list = list,
+                renderItem = { _, davResource ->
+                    val contextMenuDisplayedState = remember { mutableStateOf(false) }
+                    if (davResource == null) {
+                        IconicListNavItem(title = "..",
+                            icon = Icons.Filled.Folder,
+                            iconContentDescription = "Вверх",
+                            onPress = {
+                                onNavigateToVaultLocation(vaultLocation.up())
                             }
-                        ),
-                        onDismiss = { contextMenuDisplayedState.value = false },
-                        content = {
-                            IconicListNavItem(title = davResource.name,
-                                icon = when (davResource.isDirectory) {
-                                    true -> Icons.Filled.Folder
-                                    false -> Icons.Filled.Description
-                                },
-                                iconContentDescription = when (davResource.isDirectory) {
-                                    true -> "Папка \"${davResource.name}\""
-                                    false -> "Файл \"${davResource.name}\""
-                                },
-                                onPress = {
-                                    if (davResource.isDirectory) {
-                                        onNavigateToVaultLocation(davResource.path)
-                                    } else {
-                                        onFilePress(davResource)
+                        )
+                    } else {
+                        ContextMenu(expanded = contextMenuDisplayedState.value,
+                            items = listOf(
+                                object : ContextMenuItem {
+                                    override val id = "ID_CUT"
+                                    override val title = "Вырезать"
+                                    override fun onClick(id: String) {
+                                        handleCutFiles(listOf(davResource))
                                     }
                                 },
-                                onLongPress = { contextMenuDisplayedState.value = true })
-                        })
+                                object : ContextMenuItem {
+                                    override val id = "ID_COPY"
+                                    override val title = "Копировать"
+                                    override fun onClick(id: String) {
+                                        handleCopyFiles(listOf(davResource))
+                                    }
+                                },
+                                object : ContextMenuItem {
+                                    override val id = "ID_REMOVE"
+                                    override val title = "Удалить"
+                                    override fun onClick(id: String) {
+                                        // TODO implement removal confirmation here
+                                        onRemoveDavResource(davResource)
+                                    }
+                                }
+                            ),
+                            onDismiss = { contextMenuDisplayedState.value = false },
+                            content = {
+                                IconicListNavItem(
+                                    title = davResource.name,
+                                    icon = when (davResource.isDirectory) {
+                                        true -> Icons.Filled.Folder
+                                        false -> Icons.Filled.Description
+                                    },
+                                    iconContentDescription = when (davResource.isDirectory) {
+                                        true -> "Папка \"${davResource.name}\""
+                                        false -> "Файл \"${davResource.name}\""
+                                    },
+                                    onPress = {
+                                        if (davResource.isDirectory) {
+                                            onNavigateToVaultLocation(davResource.path)
+                                        } else {
+                                            onFilePress(davResource)
+                                        }
+                                    },
+                                    onLongPress = { contextMenuDisplayedState.value = true }
+                                )
+                            }
+                        )
+                    }
                 }
-            })
+            )
         }
     }
 }

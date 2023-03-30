@@ -6,11 +6,11 @@ import com.github.pokatomnik.davno.screens.vaultview.file.FileOpener
 import com.github.pokatomnik.davno.screens.vaultview.state.DavResourceState
 import com.github.pokatomnik.davno.services.clipboard.ClipboardIntentionId
 import com.github.pokatomnik.davno.services.clipboard.DavnoClipboard
+import com.github.pokatomnik.davno.services.storage.DavnoDavResource
 import com.github.pokatomnik.davno.services.storage.WebdavStorage
 import com.github.pokatomnik.davno.services.storage.ensureHasExtension
 import com.github.pokatomnik.davno.services.storage.joinPaths
 import com.github.pokatomnik.davno.services.usermessage.rememberMessageDisplayer
-import com.thegrizzlylabs.sardineandroid.DavResource
 import kotlinx.coroutines.launch
 
 @Composable
@@ -25,7 +25,7 @@ fun VaultStorageView(
     val coroutineScope = rememberCoroutineScope()
     val directoryListState = remember {
         mutableStateOf(
-            DavResourceState<List<DavResource>>(
+            DavResourceState<List<DavnoDavResource>>(
                 isLoading = false,
                 errorText = null,
                 data = listOf()
@@ -33,7 +33,7 @@ fun VaultStorageView(
         )
     }
     val selectedDavResourceState = remember {
-        mutableStateOf<DavResource?>(null)
+        mutableStateOf<DavnoDavResource?>(null)
     }
 
     val reloadDavResources: () -> Unit = {
@@ -73,7 +73,7 @@ fun VaultStorageView(
         coroutineScope.launch {
             try {
                 webdavStorage.putFile(
-                    relativeFilePath = filePath,
+                    path = filePath,
                     data = markdownContents
                 )
                 messageDisplayer.display("Файл $fileName успешно сохранен")
@@ -85,7 +85,7 @@ fun VaultStorageView(
         }
     }
 
-    val handleFilePress: (davResource: DavResource) -> Unit = { davResource ->
+    val handleFilePress: (davResource: DavnoDavResource) -> Unit = { davResource ->
         selectedDavResourceState.value = davResource
     }
 
@@ -117,7 +117,7 @@ fun VaultStorageView(
         }
     }
 
-    val handleRemoveDavResource: (davResourcePath: DavResource) -> Unit = { davResource ->
+    val handleRemoveDavResource: (davResourcePath: DavnoDavResource) -> Unit = { davResource ->
         val message = if (davResource.isDirectory) {
             "Папка ${davResource.name} успешно удалена"
         } else {
@@ -135,7 +135,7 @@ fun VaultStorageView(
         }
     }
 
-    val handlePasteFiles: (ClipboardIntentionId, List<DavResource>) -> Unit = {
+    val handlePasteFiles: (ClipboardIntentionId, List<DavnoDavResource>) -> Unit = {
             intentionId,
             filesToPaste ->
         when (intentionId) {
@@ -143,8 +143,8 @@ fun VaultStorageView(
                 coroutineScope.launch {
                     try {
                         webdavStorage.copy(
-                            relativePathFrom = fileToCopy.path,
-                            relativePathTo = joinPaths(vaultLocation, fileToCopy.name)
+                            fromPath = fileToCopy.path,
+                            toPath = joinPaths(vaultLocation, fileToCopy.name)
                         )
                         reloadDavResources()
                     } catch (e: Exception) {
@@ -156,8 +156,8 @@ fun VaultStorageView(
                 coroutineScope.launch {
                     try {
                         webdavStorage.move(
-                            relativePathFrom = fileToMove.path,
-                            relativePathTo = joinPaths(vaultLocation, fileToMove.name)
+                            fromPath = fileToMove.path,
+                            toPath = joinPaths(vaultLocation, fileToMove.name)
                         )
                         reloadDavResources()
                     } catch (e: Exception) {
