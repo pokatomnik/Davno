@@ -41,13 +41,6 @@ fun String.ensureHasExtension(extension: String): String {
     }
 }
 
-fun String.fileExt(): String {
-    val parts = this.split('.')
-    return if (parts.size == 1) "" else {
-        parts.last()
-    }
-}
-
 fun String.lastPathPartOrEmpty(): String {
     val parts = this.split('/').filter { it.isNotEmpty() }
     if (parts.isEmpty()) return ""

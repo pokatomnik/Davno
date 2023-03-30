@@ -6,10 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-fun <T : Any> LazyList(
+fun <T : Any?> LazyList(
+    modifier: Modifier = Modifier,
     list: List<T>,
     lazyListState: LazyListState = rememberLazyListState(),
-    modifier: Modifier = Modifier,
     renderItem: @Composable (index: Int, item: T) -> Unit
 ) {
     LazyColumn(state = lazyListState, modifier = modifier.fillMaxSize()) {
